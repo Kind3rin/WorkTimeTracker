@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { format, parseISO, startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns";
 import { it } from "date-fns/locale";
-import { CalendarIcon, ChevronLeft, ChevronRight, Search, Filter, Loader2, Plus, Receipt, Trash2, Download } from "lucide-react";
+import { CalendarIcon, ChevronLeft, ChevronRight, Search, Filter, Loader2, Plus, Receipt, Trash2, Download, Eye } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
