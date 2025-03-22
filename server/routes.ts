@@ -413,6 +413,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // API per creare un nuovo utente (solo admin)
+  app.post("/api/admin/users", isAdmin, async (req, res) => {
+    try {
+      const userData = insertUserSchema.parse(req.body);
+      // Non possiamo usare la stessa funzione che viene usata per registrare un utente normale
+      // perché l'admin deve poter specificare il ruolo (che normalmente è hardcoded a "employee")
+      const hashedPassword = await hashPassword(userData.password);
+      
+      const newUser = await storage.createUser({
+        ...userData,
+        password: hashedPassword
+      });
+      
+      // Rimuovi la password dalla risposta
+      const { password, ...userWithoutPassword } = newUser;
+      
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Error creating user:", error);
+      res.status(500).json({ error: "Errore durante la creazione dell'utente" });
+    }
+  });
+  
+  // API per cambiare il ruolo di un utente (solo admin)
+  app.patch("/api/admin/users/:userId/role", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const { role } = req.body;
+      
+      if (!role || !["admin", "employee"].includes(role)) {
+        return res.status(400).json({ error: "Ruolo non valido" });
+      }
+      
+      // Verifichiamo che l'utente esista
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "Utente non trovato" });
+      }
+      
+      // Effettuiamo l'aggiornamento del ruolo
+      // Qui ipotizziamo l'esistenza di un metodo updateUserRole, che dovremo implementare
+      const updatedUser = await storage.updateUserRole(userId, role);
+      
+      // Rimuovi la password dalla risposta
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      res.status(500).json({ error: "Errore durante l'aggiornamento del ruolo" });
+    }
+  });
+  
+  // API per resettare la password di un utente (solo admin)
+  app.post("/api/admin/users/:userId/reset-password", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Verifichiamo che l'utente esista
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "Utente non trovato" });
+      }
+      
+      // Generiamo una password temporanea casuale
+      const temporaryPassword = Math.random().toString(36).slice(-8);
+      const hashedPassword = await hashPassword(temporaryPassword);
+      
+      // Effettuiamo l'aggiornamento della password
+      // Qui ipotizziamo l'esistenza di un metodo updateUserPassword, che dovremo implementare
+      await storage.updateUserPassword(userId, hashedPassword);
+      
+      res.json({ 
+        message: "Password resettata con successo",
+        temporaryPassword
+      });
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      res.status(500).json({ error: "Errore durante il reset della password" });
+    }
+  });
+  
   // API per ottenere tutti i dati in base al tipo (solo admin)
   app.get("/api/admin/:type", isAdmin, async (req, res) => {
     try {

@@ -733,6 +733,7 @@ export default function AdminPage() {
           <TabsTrigger value="trips">Viaggi</TabsTrigger>
           <TabsTrigger value="leaveRequests">Permessi</TabsTrigger>
           <TabsTrigger value="sickLeaves">Malattie</TabsTrigger>
+          <TabsTrigger value="users">Utenti</TabsTrigger>
         </TabsList>
 
         <TabsContent value="timeEntries">
@@ -829,7 +830,203 @@ export default function AdminPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="users">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Gestione Utenti</CardTitle>
+                <CardDescription>
+                  Gestisci gli utenti del sistema, i loro ruoli e le loro password
+                </CardDescription>
+              </div>
+              <Button onClick={() => setShowNewUserDialog(true)}>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Nuovo Utente
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {usersQuery.isLoading ? (
+                <div className="flex items-center justify-center p-6">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : usersQuery.error ? (
+                <div className="text-center p-6 text-destructive">
+                  Errore nel caricamento degli utenti
+                </div>
+              ) : (
+                <DataTable
+                  columns={userColumns}
+                  data={usersQuery.data || []}
+                  searchKey="username"
+                  searchPlaceholder="Cerca utente..."
+                />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      {/* Dialog per la creazione di un nuovo utente */}
+      <Dialog open={showNewUserDialog} onOpenChange={setShowNewUserDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Crea nuovo utente</DialogTitle>
+            <DialogDescription>
+              Inserisci i dati per creare un nuovo utente nel sistema.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...newUserForm}>
+            <form onSubmit={newUserForm.handleSubmit((data) => createUserMutation.mutate(data))} className="space-y-4">
+              <FormField
+                control={newUserForm.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={newUserForm.control}
+                name="fullName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome Completo</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={newUserForm.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Password temporanea che l'utente dovrà cambiare al primo accesso.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={newUserForm.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ruolo</FormLabel>
+                    <FormControl>
+                      <select 
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        {...field}
+                      >
+                        <option value="employee">Dipendente</option>
+                        <option value="admin">Amministratore</option>
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="submit" disabled={createUserMutation.isPending}>
+                  {createUserMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creazione in corso...
+                    </>
+                  ) : (
+                    "Crea Utente"
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog per cambiare ruolo */}
+      <Dialog open={showChangeRoleDialog} onOpenChange={setShowChangeRoleDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Cambia ruolo utente</DialogTitle>
+            <DialogDescription>
+              Seleziona il nuovo ruolo per l'utente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nuovo ruolo</label>
+                <select 
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  onChange={(e) => {
+                    if (selectedUserId) {
+                      changeRoleMutation.mutate({ 
+                        userId: selectedUserId, 
+                        role: e.target.value 
+                      });
+                    }
+                  }}
+                  disabled={changeRoleMutation.isPending}
+                >
+                  <option disabled selected>Seleziona ruolo</option>
+                  <option value="employee">Dipendente</option>
+                  <option value="admin">Amministratore</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowChangeRoleDialog(false)}>
+              Annulla
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog per reset password */}
+      <AlertDialog open={showResetPasswordDialog} onOpenChange={setShowResetPasswordDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset password</AlertDialogTitle>
+            <AlertDialogDescription>
+              Sei sicuro di voler resettare la password di questo utente? Verrà generata una nuova password temporanea che l'utente dovrà cambiare al primo accesso.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                if (selectedUserId) {
+                  resetPasswordMutation.mutate({ userId: selectedUserId });
+                }
+              }}
+              disabled={resetPasswordMutation.isPending}
+            >
+              {resetPasswordMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Resettando...
+                </>
+              ) : (
+                "Resetta password"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {renderItemDetails()}
     </div>
