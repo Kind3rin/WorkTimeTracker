@@ -2,321 +2,191 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { 
-  insertTimeEntrySchema, 
-  insertExpenseSchema, 
-  insertTravelSchema, 
-  insertLeaveSchema, 
-  insertProjectSchema 
-} from "@shared/schema";
+import { insertTimeEntrySchema, insertExpenseSchema, insertTripSchema, insertLeaveRequestSchema } from "@shared/schema";
 import { z } from "zod";
-
-// Middleware to check if user is authenticated
-function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: "Authentication required" });
-  }
-  next();
-}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
   setupAuth(app);
 
-  // Projects routes
-  app.get("/api/projects", requireAuth, async (req, res) => {
-    try {
-      const projects = await storage.getProjects();
-      res.json(projects);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch projects" });
-    }
+  // API routes for activity types
+  app.get("/api/activity-types", async (req, res) => {
+    const activityTypes = await storage.getActivityTypes();
+    res.json(activityTypes);
   });
 
-  app.get("/api/projects/:id", requireAuth, async (req, res) => {
-    try {
-      const project = await storage.getProject(Number(req.params.id));
-      if (!project) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-      res.json(project);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch project" });
-    }
+  app.get("/api/activity-types/category/:category", async (req, res) => {
+    const { category } = req.params;
+    const activityTypes = await storage.getActivityTypesByCategory(category);
+    res.json(activityTypes);
   });
 
-  // Time Entries routes
-  app.get("/api/time-entries", requireAuth, async (req, res) => {
-    try {
-      const timeEntries = await storage.getTimeEntries(req.user!.id);
-      res.json(timeEntries);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch time entries" });
-    }
+  // API routes for projects
+  app.get("/api/projects", async (req, res) => {
+    const projects = await storage.getProjects();
+    res.json(projects);
   });
 
-  app.post("/api/time-entries", requireAuth, async (req, res) => {
+  // API routes for time entries
+  app.get("/api/time-entries", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const userId = req.user!.id;
+    const timeEntries = await storage.getTimeEntriesByUser(userId);
+    res.json(timeEntries);
+  });
+
+  app.get("/api/time-entries/range", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const userId = req.user!.id;
+    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(0);
+    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
+    
+    const timeEntries = await storage.getTimeEntriesByUserAndDateRange(userId, startDate, endDate);
+    res.json(timeEntries);
+  });
+
+  app.post("/api/time-entries", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
     try {
-      const data = insertTimeEntrySchema.parse({
+      const userId = req.user!.id;
+      const parsedData = insertTimeEntrySchema.parse({
         ...req.body,
-        userId: req.user!.id
+        userId
       });
       
-      const timeEntry = await storage.createTimeEntry(data);
+      const timeEntry = await storage.createTimeEntry(parsedData);
       res.status(201).json(timeEntry);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Validation error", errors: error.errors });
+        return res.status(400).json({ error: error.errors });
       }
-      res.status(500).json({ message: "Failed to create time entry" });
+      res.status(500).json({ error: "Failed to create time entry" });
     }
   });
 
-  app.put("/api/time-entries/:id", requireAuth, async (req, res) => {
-    try {
-      const timeEntry = await storage.getTimeEntry(Number(req.params.id));
-      
-      if (!timeEntry) {
-        return res.status(404).json({ message: "Time entry not found" });
-      }
-      
-      if (timeEntry.userId !== req.user!.id) {
-        return res.status(403).json({ message: "Not authorized to update this time entry" });
-      }
-      
-      const updatedEntry = await storage.updateTimeEntry(Number(req.params.id), req.body);
-      res.json(updatedEntry);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Validation error", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to update time entry" });
-    }
+  // API routes for expenses
+  app.get("/api/expenses", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const userId = req.user!.id;
+    const expenses = await storage.getExpensesByUser(userId);
+    res.json(expenses);
   });
 
-  app.delete("/api/time-entries/:id", requireAuth, async (req, res) => {
-    try {
-      const timeEntry = await storage.getTimeEntry(Number(req.params.id));
-      
-      if (!timeEntry) {
-        return res.status(404).json({ message: "Time entry not found" });
-      }
-      
-      if (timeEntry.userId !== req.user!.id) {
-        return res.status(403).json({ message: "Not authorized to delete this time entry" });
-      }
-      
-      await storage.deleteTimeEntry(Number(req.params.id));
-      res.status(204).end();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete time entry" });
-    }
+  app.get("/api/expenses/range", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const userId = req.user!.id;
+    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(0);
+    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
+    
+    const expenses = await storage.getExpensesByUserAndDateRange(userId, startDate, endDate);
+    res.json(expenses);
   });
 
-  // Expenses routes
-  app.get("/api/expenses", requireAuth, async (req, res) => {
+  app.post("/api/expenses", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
     try {
-      const expenses = await storage.getExpenses(req.user!.id);
-      res.json(expenses);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch expenses" });
-    }
-  });
-
-  app.post("/api/expenses", requireAuth, async (req, res) => {
-    try {
-      const data = insertExpenseSchema.parse({
+      const userId = req.user!.id;
+      const parsedData = insertExpenseSchema.parse({
         ...req.body,
-        userId: req.user!.id
+        userId
       });
       
-      const expense = await storage.createExpense(data);
+      const expense = await storage.createExpense(parsedData);
       res.status(201).json(expense);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Validation error", errors: error.errors });
+        return res.status(400).json({ error: error.errors });
       }
-      res.status(500).json({ message: "Failed to create expense" });
+      res.status(500).json({ error: "Failed to create expense" });
     }
   });
 
-  app.put("/api/expenses/:id", requireAuth, async (req, res) => {
-    try {
-      const expense = await storage.getExpense(Number(req.params.id));
-      
-      if (!expense) {
-        return res.status(404).json({ message: "Expense not found" });
-      }
-      
-      if (expense.userId !== req.user!.id) {
-        return res.status(403).json({ message: "Not authorized to update this expense" });
-      }
-      
-      const updatedExpense = await storage.updateExpense(Number(req.params.id), req.body);
-      res.json(updatedExpense);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Validation error", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to update expense" });
-    }
+  // API routes for business trips
+  app.get("/api/trips", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const userId = req.user!.id;
+    const trips = await storage.getTripsByUser(userId);
+    res.json(trips);
   });
 
-  app.delete("/api/expenses/:id", requireAuth, async (req, res) => {
-    try {
-      const expense = await storage.getExpense(Number(req.params.id));
-      
-      if (!expense) {
-        return res.status(404).json({ message: "Expense not found" });
-      }
-      
-      if (expense.userId !== req.user!.id) {
-        return res.status(403).json({ message: "Not authorized to delete this expense" });
-      }
-      
-      await storage.deleteExpense(Number(req.params.id));
-      res.status(204).end();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete expense" });
-    }
+  app.get("/api/trips/status/:status", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const userId = req.user!.id;
+    const { status } = req.params;
+    
+    const trips = await storage.getTripsByUserAndStatus(userId, status);
+    res.json(trips);
   });
 
-  // Travel routes
-  app.get("/api/travels", requireAuth, async (req, res) => {
+  app.post("/api/trips", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
     try {
-      const travels = await storage.getTravels(req.user!.id);
-      res.json(travels);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch travels" });
-    }
-  });
-
-  app.post("/api/travels", requireAuth, async (req, res) => {
-    try {
-      const data = insertTravelSchema.parse({
+      const userId = req.user!.id;
+      const parsedData = insertTripSchema.parse({
         ...req.body,
-        userId: req.user!.id
+        userId
       });
       
-      const travel = await storage.createTravel(data);
-      res.status(201).json(travel);
+      const trip = await storage.createTrip(parsedData);
+      res.status(201).json(trip);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Validation error", errors: error.errors });
+        return res.status(400).json({ error: error.errors });
       }
-      res.status(500).json({ message: "Failed to create travel" });
+      res.status(500).json({ error: "Failed to create trip" });
     }
   });
 
-  app.put("/api/travels/:id", requireAuth, async (req, res) => {
-    try {
-      const travel = await storage.getTravel(Number(req.params.id));
-      
-      if (!travel) {
-        return res.status(404).json({ message: "Travel not found" });
-      }
-      
-      if (travel.userId !== req.user!.id) {
-        return res.status(403).json({ message: "Not authorized to update this travel" });
-      }
-      
-      const updatedTravel = await storage.updateTravel(Number(req.params.id), req.body);
-      res.json(updatedTravel);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Validation error", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to update travel" });
-    }
+  // API routes for leave requests
+  app.get("/api/leave-requests", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const userId = req.user!.id;
+    const leaveRequests = await storage.getLeaveRequestsByUser(userId);
+    res.json(leaveRequests);
   });
 
-  app.delete("/api/travels/:id", requireAuth, async (req, res) => {
-    try {
-      const travel = await storage.getTravel(Number(req.params.id));
-      
-      if (!travel) {
-        return res.status(404).json({ message: "Travel not found" });
-      }
-      
-      if (travel.userId !== req.user!.id) {
-        return res.status(403).json({ message: "Not authorized to delete this travel" });
-      }
-      
-      await storage.deleteTravel(Number(req.params.id));
-      res.status(204).end();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete travel" });
-    }
+  app.get("/api/leave-requests/range", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const userId = req.user!.id;
+    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(0);
+    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
+    
+    const leaveRequests = await storage.getLeaveRequestsByUserAndDateRange(userId, startDate, endDate);
+    res.json(leaveRequests);
   });
 
-  // Leave routes
-  app.get("/api/leaves", requireAuth, async (req, res) => {
+  app.post("/api/leave-requests", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
     try {
-      const leaves = await storage.getLeaves(req.user!.id);
-      res.json(leaves);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch leaves" });
-    }
-  });
-
-  app.post("/api/leaves", requireAuth, async (req, res) => {
-    try {
-      const data = insertLeaveSchema.parse({
+      const userId = req.user!.id;
+      const parsedData = insertLeaveRequestSchema.parse({
         ...req.body,
-        userId: req.user!.id
+        userId
       });
       
-      const leave = await storage.createLeave(data);
-      res.status(201).json(leave);
+      const leaveRequest = await storage.createLeaveRequest(parsedData);
+      res.status(201).json(leaveRequest);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Validation error", errors: error.errors });
+        return res.status(400).json({ error: error.errors });
       }
-      res.status(500).json({ message: "Failed to create leave" });
+      res.status(500).json({ error: "Failed to create leave request" });
     }
   });
 
-  app.put("/api/leaves/:id", requireAuth, async (req, res) => {
-    try {
-      const leave = await storage.getLeave(Number(req.params.id));
-      
-      if (!leave) {
-        return res.status(404).json({ message: "Leave not found" });
-      }
-      
-      if (leave.userId !== req.user!.id) {
-        return res.status(403).json({ message: "Not authorized to update this leave" });
-      }
-      
-      const updatedLeave = await storage.updateLeave(Number(req.params.id), req.body);
-      res.json(updatedLeave);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Validation error", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to update leave" });
-    }
-  });
-
-  app.delete("/api/leaves/:id", requireAuth, async (req, res) => {
-    try {
-      const leave = await storage.getLeave(Number(req.params.id));
-      
-      if (!leave) {
-        return res.status(404).json({ message: "Leave not found" });
-      }
-      
-      if (leave.userId !== req.user!.id) {
-        return res.status(403).json({ message: "Not authorized to delete this leave" });
-      }
-      
-      await storage.deleteLeave(Number(req.params.id));
-      res.status(204).end();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete leave" });
-    }
-  });
-
+  // Create and return the HTTP server
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -1,138 +1,77 @@
-import { useQuery } from "@tanstack/react-query";
-import { Travel, Leave } from "@shared/schema";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { getStatusBadgeColor, getStatusTranslation, formatDate } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 
-type Event = {
+interface Event {
   id: number;
-  type: 'travel' | 'leave';
+  date: string;
   title: string;
-  startDate: Date;
-  endDate: Date | null;
-  time?: string;
-  status: string;
-  badge: string;
-};
+  description: string;
+  status: "pending" | "confirmed" | "urgent" | "info";
+}
 
-export default function UpcomingEvents() {
-  const { data: travels, isLoading: travelsLoading } = useQuery<Travel[]>({
-    queryKey: ["/api/travels"],
-  });
+interface UpcomingEventsProps {
+  events: Event[];
+}
 
-  const { data: leaves, isLoading: leavesLoading } = useQuery<Leave[]>({
-    queryKey: ["/api/leaves"],
-  });
-
-  const isLoading = travelsLoading || leavesLoading;
-
-  // Combine and sort events
-  const getEvents = (): Event[] => {
-    const events: Event[] = [];
-    
-    if (travels) {
-      travels.forEach(travel => {
-        events.push({
-          id: travel.id,
-          type: 'travel',
-          title: `Trasferta ${travel.destination} - ${travel.purpose}`,
-          startDate: new Date(travel.startDate),
-          endDate: new Date(travel.endDate),
-          time: "08:00 - 17:00",
-          status: travel.status,
-          badge: "Trasferta"
-        });
-      });
+export default function UpcomingEvents({ events }: UpcomingEventsProps) {
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "confirmed":
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Confermato</Badge>;
+      case "urgent":
+        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Urgente</Badge>;
+      case "info":
+        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Informativo</Badge>;
+      default:
+        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">In Attesa</Badge>;
     }
-    
-    if (leaves) {
-      leaves.forEach(leave => {
-        let badge = "Permesso";
-        if (leave.type === "vacation") badge = "Ferie";
-        if (leave.type === "sick") badge = "Malattia";
-        
-        events.push({
-          id: leave.id,
-          type: 'leave',
-          title: badge,
-          startDate: new Date(leave.startDate),
-          endDate: new Date(leave.endDate),
-          status: leave.status,
-          badge
-        });
-      });
-    }
-    
-    // Sort by date (ascending)
-    return events
-      .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
-      .slice(0, 4); // Take the next 4 events
   };
 
-  const upcomingEvents = getEvents();
-
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold">Prossimi Eventi</h2>
-        <Link href="/calendar">
-          <a className="text-primary text-sm hover:underline">Calendario completo</a>
-        </Link>
+    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+      <div className="px-6 py-4 border-b">
+        <h2 className="text-lg font-medium">Prossimi Eventi</h2>
       </div>
       
-      {isLoading ? (
-        <div className="flex justify-center items-center h-52">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {upcomingEvents.length > 0 ? (
-            upcomingEvents.map((event) => {
-              const day = format(event.startDate, "dd", { locale: it });
-              const month = format(event.startDate, "MMM", { locale: it }).toUpperCase();
-              
-              let badgeClass = "bg-neutral-medium bg-opacity-10 text-neutral-medium";
-              if (event.badge === "Trasferta") badgeClass = "bg-primary-light bg-opacity-10 text-primary-light";
-              if (event.badge === "Ferie") badgeClass = "bg-success bg-opacity-10 text-success";
-              if (event.badge === "Malattia") badgeClass = "bg-error bg-opacity-10 text-error";
-              
+      <div className="p-4">
+        <div className="space-y-4">
+          {events.length > 0 ? (
+            events.map((event) => {
+              const date = parseISO(event.date);
               return (
-                <div key={`${event.type}-${event.id}`} className="flex p-3 border rounded-md hover:bg-neutral-lightest">
-                  <div className="mr-3 text-center">
-                    <div className="font-bold text-primary">{day}</div>
-                    <div className="text-xs text-neutral-medium">{month}</div>
+                <div key={event.id} className="flex items-start p-3 rounded-lg hover:bg-neutral-50">
+                  <div className="flex-shrink-0 bg-primary-100 text-primary-700 rounded-lg w-12 h-12 flex flex-col items-center justify-center mr-4">
+                    <span className="text-xs font-medium">{format(date, "MMM", { locale: it }).toUpperCase()}</span>
+                    <span className="text-lg font-bold">{format(date, "dd")}</span>
                   </div>
-                  <div className="flex-grow">
-                    <h3 className="font-semibold">{event.title}</h3>
-                    <div className="text-xs text-neutral-medium flex items-center mt-1">
-                      <i className={`ri-${event.time ? "time" : "calendar"}-line mr-1`}></i>
-                      <span>
-                        {event.time || 
-                          (event.endDate 
-                            ? `${formatDate(event.startDate)} - ${formatDate(event.endDate)}`
-                            : formatDate(event.startDate)
-                          )
-                        }
-                      </span>
-                    </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-medium text-neutral-800">{event.title}</h3>
+                    <p className="text-xs text-neutral-500 mt-1">{event.description}</p>
                   </div>
-                  <div className="self-center">
-                    <span className={`px-2 py-0.5 text-xs rounded-full ${badgeClass}`}>
-                      {event.badge}
-                    </span>
+                  <div className="ml-4">
+                    {getStatusBadge(event.status)}
                   </div>
                 </div>
               );
             })
           ) : (
-            <div className="text-center p-6 text-neutral-medium">
-              Nessun evento programmato.
+            <div className="text-center py-6 text-neutral-500">
+              Nessun evento programmato
             </div>
           )}
         </div>
-      )}
+      </div>
+      
+      <div className="px-6 py-3 bg-neutral-50 border-t">
+        <Link href="/calendar">
+          <Button variant="ghost" className="w-full text-primary-500 hover:text-primary-600 hover:bg-transparent text-sm font-medium">
+            Visualizza Calendario Completo
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 }

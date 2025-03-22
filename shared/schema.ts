@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, real, varchar, date } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, numeric, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -7,97 +7,15 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  name: text("name").notNull(),
+  fullName: text("full_name").notNull(),
   role: text("role").notNull().default("employee"),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
-  name: true,
+  fullName: true,
   role: true,
-});
-
-// Time entries table
-export const timeEntries = pgTable("time_entries", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  projectId: integer("project_id").notNull(),
-  date: date("date").notNull(),
-  hours: real("hours").notNull(),
-  description: text("description"),
-  status: text("status").notNull().default("pending"),
-});
-
-export const insertTimeEntrySchema = createInsertSchema(timeEntries).pick({
-  userId: true,
-  projectId: true,
-  date: true,
-  hours: true,
-  description: true,
-  status: true,
-});
-
-// Expenses table
-export const expenses = pgTable("expenses", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  category: text("category").notNull(),
-  amount: real("amount").notNull(),
-  date: date("date").notNull(),
-  description: text("description").notNull(),
-  status: text("status").notNull().default("pending"),
-  receiptPath: text("receipt_path"),
-});
-
-export const insertExpenseSchema = createInsertSchema(expenses).pick({
-  userId: true,
-  category: true,
-  amount: true,
-  date: true,
-  description: true,
-  status: true,
-  receiptPath: true,
-});
-
-// Travel/Business trips table
-export const travels = pgTable("travels", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  destination: text("destination").notNull(),
-  purpose: text("purpose").notNull(),
-  startDate: date("start_date").notNull(),
-  endDate: date("end_date").notNull(),
-  status: text("status").notNull().default("pending"),
-});
-
-export const insertTravelSchema = createInsertSchema(travels).pick({
-  userId: true,
-  destination: true,
-  purpose: true,
-  startDate: true,
-  endDate: true,
-  status: true,
-});
-
-// Leave requests (vacation, sick leave, time off)
-export const leaves = pgTable("leaves", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  type: text("type").notNull(), // vacation, sick, time_off
-  startDate: date("start_date").notNull(),
-  endDate: date("end_date").notNull(),
-  reason: text("reason"),
-  status: text("status").notNull().default("pending"),
-});
-
-export const insertLeaveSchema = createInsertSchema(leaves).pick({
-  userId: true,
-  type: true,
-  startDate: true,
-  endDate: true,
-  reason: true,
-  status: true,
 });
 
 // Projects table
@@ -105,24 +23,121 @@ export const projects = pgTable("projects", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
-  startDate: date("start_date").notNull(),
-  endDate: date("end_date"),
-  status: text("status").notNull().default("planning"),
-  progress: integer("progress").notNull().default(0),
+  client: text("client"),
+  status: text("status").notNull().default("active"),
 });
 
-export const insertProjectSchema = createInsertSchema(projects).pick({
-  name: true,
+export const insertProjectSchema = createInsertSchema(projects);
+
+// Activity types
+export const activityTypes = pgTable("activity_types", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  category: text("category").notNull(), // work, time_off, trip
+  description: text("description"),
+});
+
+export const insertActivityTypeSchema = createInsertSchema(activityTypes);
+
+// Time entries
+export const timeEntries = pgTable("time_entries", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  date: date("date").notNull(),
+  projectId: integer("project_id").notNull(),
+  activityTypeId: integer("activity_type_id").notNull(),
+  description: text("description"),
+  hours: numeric("hours").notNull(),
+  status: text("status").notNull().default("pending"), // pending, approved, rejected
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertTimeEntrySchema = createInsertSchema(timeEntries).pick({
+  userId: true,
+  date: true,
+  projectId: true,
+  activityTypeId: true,
   description: true,
+  hours: true,
+  status: true,
+});
+
+// Expenses
+export const expenses = pgTable("expenses", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  date: date("date").notNull(),
+  amount: numeric("amount").notNull(),
+  category: text("category").notNull(), // travel, meal, accommodation, other
+  description: text("description"),
+  tripId: integer("trip_id"),
+  receiptPath: text("receipt_path"),
+  status: text("status").notNull().default("pending"), // pending, approved, rejected
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertExpenseSchema = createInsertSchema(expenses).pick({
+  userId: true,
+  date: true,
+  amount: true,
+  category: true,
+  description: true,
+  tripId: true,
+  receiptPath: true,
+  status: true,
+});
+
+// Business trips
+export const trips = pgTable("trips", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  destination: text("destination").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  purpose: text("purpose"),
+  status: text("status").notNull().default("pending"), // pending, approved, rejected, completed
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertTripSchema = createInsertSchema(trips).pick({
+  userId: true,
+  destination: true,
   startDate: true,
   endDate: true,
+  purpose: true,
   status: true,
-  progress: true,
 });
 
-// Export types
+// Leave requests (sick leave, vacation, etc.)
+export const leaveRequests = pgTable("leave_requests", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  type: text("type").notNull(), // sick_leave, vacation, personal_leave
+  reason: text("reason"),
+  status: text("status").notNull().default("pending"), // pending, approved, rejected
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertLeaveRequestSchema = createInsertSchema(leaveRequests).pick({
+  userId: true,
+  startDate: true,
+  endDate: true,
+  type: true,
+  reason: true,
+  status: true,
+});
+
+// Define types for all schemas
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+
+export type Project = typeof projects.$inferSelect;
+export type InsertProject = z.infer<typeof insertProjectSchema>;
+
+export type ActivityType = typeof activityTypes.$inferSelect;
+export type InsertActivityType = z.infer<typeof insertActivityTypeSchema>;
 
 export type TimeEntry = typeof timeEntries.$inferSelect;
 export type InsertTimeEntry = z.infer<typeof insertTimeEntrySchema>;
@@ -130,11 +145,8 @@ export type InsertTimeEntry = z.infer<typeof insertTimeEntrySchema>;
 export type Expense = typeof expenses.$inferSelect;
 export type InsertExpense = z.infer<typeof insertExpenseSchema>;
 
-export type Travel = typeof travels.$inferSelect;
-export type InsertTravel = z.infer<typeof insertTravelSchema>;
+export type Trip = typeof trips.$inferSelect;
+export type InsertTrip = z.infer<typeof insertTripSchema>;
 
-export type Leave = typeof leaves.$inferSelect;
-export type InsertLeave = z.infer<typeof insertLeaveSchema>;
-
-export type Project = typeof projects.$inferSelect;
-export type InsertProject = z.infer<typeof insertProjectSchema>;
+export type LeaveRequest = typeof leaveRequests.$inferSelect;
+export type InsertLeaveRequest = z.infer<typeof insertLeaveRequestSchema>;

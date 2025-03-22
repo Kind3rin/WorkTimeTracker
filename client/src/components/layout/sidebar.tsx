@@ -1,152 +1,180 @@
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { navItems, settingsItems } from "@/lib/constants";
-import { getUserInitials } from "@/lib/utils";
-import { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
-import { useMediaQuery } from "@/hooks/use-mobile";
+import { 
+  Calendar, 
+  Clock, 
+  MapPin, 
+  BarChart, 
+  LogOut, 
+  Menu, 
+  X, 
+  Settings, 
+  DollarSign,
+  LayoutDashboard
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export default function Sidebar() {
-  const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  const { user, logoutMutation } = useAuth();
+  const { toast } = useToast();
+  const isMobile = useIsMobile();
+  const [isOpen, setIsOpen] = useState(!isMobile);
 
-  // Close sidebar on mobile when location changes
   useEffect(() => {
-    if (isMobile) {
-      setIsSidebarOpen(false);
+    if (!isMobile) {
+      setIsOpen(true);
     }
-  }, [location, isMobile]);
-
-  // Close sidebar when clicking outside on mobile
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const sidebar = document.getElementById("sidebar");
-      const sidebarToggle = document.getElementById("open-sidebar");
-      
-      if (
-        isMobile &&
-        sidebar &&
-        !sidebar.contains(event.target as Node) &&
-        sidebarToggle !== event.target
-      ) {
-        setIsSidebarOpen(false);
-      }
-    };
-
-    document.addEventListener("click", handleClickOutside);
-    
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-    };
   }, [isMobile]);
 
   const handleLogout = () => {
     logoutMutation.mutate();
   };
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
+  const closeSidebar = () => {
+    if (isMobile) {
+      setIsOpen(false);
+    }
   };
 
-  // This function is called by the TopBar component
-  window.toggleSidebar = toggleSidebar;
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  };
 
   return (
-    <div 
-      id="sidebar" 
-      className={cn(
-        "sidebar fixed md:relative z-30 w-64 h-full bg-white shadow-md flex-shrink-0 flex flex-col",
-        isMobile && "transform -translate-x-full transition-transform duration-300 ease-in-out",
-        isMobile && isSidebarOpen && "transform translate-x-0"
-      )}
-    >
-      <div className="p-4 border-b flex items-center justify-between">
-        <div className="flex items-center">
-          <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
-            <i className="ri-briefcase-line text-white"></i>
-          </div>
-          <h1 className="ml-2 text-lg font-semibold">WorkTrack Pro</h1>
-        </div>
-        {isMobile && (
-          <button 
-            id="close-sidebar" 
-            className="text-neutral-dark"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <i className="ri-close-line text-xl"></i>
-          </button>
-        )}
-      </div>
-      
-      {user && (
-        <div className="p-4 border-b bg-neutral-lightest">
+    <>
+      {/* Mobile Header */}
+      {isMobile && (
+        <div className="lg:hidden bg-white shadow-sm py-2 px-4 flex items-center justify-between z-10">
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-primary-light flex items-center justify-center text-white font-semibold">
-              <span>{getUserInitials(user.name)}</span>
-            </div>
-            <div className="ml-3">
-              <p className="font-semibold text-sm">{user.name}</p>
-              <p className="text-xs text-neutral-medium">{user.role}</p>
-            </div>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-neutral-800 focus:outline-none"
+            >
+              <Menu className="h-6 w-6" />
+            </Button>
+            <span className="ml-2 text-lg font-semibold text-primary-500">WorkTrack</span>
+          </div>
+          <div>
+            <Avatar className="h-8 w-8 bg-primary-500 text-white">
+              <AvatarFallback>{user ? getInitials(user.fullName || user.username) : "U"}</AvatarFallback>
+            </Avatar>
           </div>
         </div>
       )}
+
+      {/* Sidebar Overlay */}
+      {isMobile && isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/20 z-20" 
+          onClick={() => setIsOpen(false)}
+        />
+      )}
       
-      <div className="overflow-y-auto flex-grow">
-        <nav className="py-2">
-          <p className="px-4 py-2 text-xs font-semibold text-neutral-medium uppercase">Menu principale</p>
+      {/* Sidebar */}
+      <div 
+        className={`fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-lg transform transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-auto lg:h-screen ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between p-4 border-b">
+            <div className="flex items-center">
+              <Calendar className="h-8 w-8 text-primary-500" />
+              <span className="ml-2 text-lg font-semibold text-primary-500">WorkTrack</span>
+            </div>
+            {isMobile && (
+              <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="text-neutral-500 lg:hidden">
+                <X className="h-6 w-6" />
+              </Button>
+            )}
+          </div>
           
-          {navItems.map((item) => (
-            <Link 
-              key={item.path} 
-              href={item.path}
-            >
-              <a 
-                className={cn(
-                  "sidebar-link flex items-center px-4 py-2 text-sm hover:bg-neutral-lightest",
-                  location === item.path && "active bg-neutral-lightest border-l-3 border-primary"
-                )}
-              >
-                <i className={`ri-${item.icon} mr-3 text-lg`}></i>
-                <span>{item.name}</span>
-              </a>
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4">
+              <div className="flex flex-col items-center py-4">
+                <Avatar className="w-20 h-20 bg-primary-500 text-white mb-2">
+                  <AvatarFallback className="text-xl">{user ? getInitials(user.fullName || user.username) : "U"}</AvatarFallback>
+                </Avatar>
+                <h3 className="font-medium">{user?.fullName || user?.username}</h3>
+                <p className="text-sm text-neutral-500">{user?.role || "Employee"}</p>
+              </div>
+              
+              <nav className="mt-4 space-y-1">
+                <Link href="/" onClick={closeSidebar}>
+                  <div className={`flex items-center px-4 py-3 rounded-lg font-medium ${location === "/" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
+                    <LayoutDashboard className={`h-5 w-5 mr-3 ${location === "/" ? "text-primary-500" : "text-neutral-500"}`} />
+                    Dashboard
+                  </div>
+                </Link>
+                
+                <Link href="/timesheet" onClick={closeSidebar}>
+                  <div className={`flex items-center px-4 py-3 rounded-lg font-medium ${location === "/timesheet" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
+                    <Clock className={`h-5 w-5 mr-3 ${location === "/timesheet" ? "text-primary-500" : "text-neutral-500"}`} />
+                    Consuntivi
+                  </div>
+                </Link>
+                
+                <Link href="/expenses" onClick={closeSidebar}>
+                  <div className={`flex items-center px-4 py-3 rounded-lg font-medium ${location === "/expenses" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
+                    <DollarSign className={`h-5 w-5 mr-3 ${location === "/expenses" ? "text-primary-500" : "text-neutral-500"}`} />
+                    Note Spese
+                  </div>
+                </Link>
+                
+                <Link href="/trips" onClick={closeSidebar}>
+                  <div className={`flex items-center px-4 py-3 rounded-lg font-medium ${location === "/trips" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
+                    <MapPin className={`h-5 w-5 mr-3 ${location === "/trips" ? "text-primary-500" : "text-neutral-500"}`} />
+                    Trasferte
+                  </div>
+                </Link>
+                
+                <Link href="/timeoff" onClick={closeSidebar}>
+                  <div className={`flex items-center px-4 py-3 rounded-lg font-medium ${location === "/timeoff" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
+                    <Calendar className={`h-5 w-5 mr-3 ${location === "/timeoff" ? "text-primary-500" : "text-neutral-500"}`} />
+                    Ferie e Permessi
+                  </div>
+                </Link>
+                
+                <Link href="/reports" onClick={closeSidebar}>
+                  <div className={`flex items-center px-4 py-3 rounded-lg font-medium ${location === "/reports" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
+                    <BarChart className={`h-5 w-5 mr-3 ${location === "/reports" ? "text-primary-500" : "text-neutral-500"}`} />
+                    Report
+                  </div>
+                </Link>
+              </nav>
+            </div>
+          </div>
+          
+          <div className="p-4 border-t">
+            <Link href="/settings" onClick={closeSidebar}>
+              <div className="flex items-center px-4 py-3 text-neutral-800 rounded-lg hover:bg-neutral-50">
+                <Settings className="h-5 w-5 mr-3 text-neutral-500" />
+                Impostazioni
+              </div>
             </Link>
-          ))}
-          
-          <div className="border-t my-2"></div>
-          
-          <p className="px-4 py-2 text-xs font-semibold text-neutral-medium uppercase">Impostazioni</p>
-          
-          {settingsItems.map((item) => (
-            <Link 
-              key={item.path} 
-              href={item.path}
+            
+            <div 
+              className="flex items-center px-4 py-3 text-neutral-800 rounded-lg hover:bg-neutral-50 cursor-pointer"
+              onClick={handleLogout}
             >
-              <a 
-                className={cn(
-                  "sidebar-link flex items-center px-4 py-2 text-sm hover:bg-neutral-lightest",
-                  location === item.path && "active bg-neutral-lightest border-l-3 border-primary"
-                )}
-              >
-                <i className={`ri-${item.icon} mr-3 text-lg`}></i>
-                <span>{item.name}</span>
-              </a>
-            </Link>
-          ))}
-        </nav>
+              <LogOut className="h-5 w-5 mr-3 text-neutral-500" />
+              Logout
+            </div>
+          </div>
+        </div>
       </div>
-      
-      <div className="p-4 border-t">
-        <button 
-          className="flex items-center text-sm text-neutral-dark hover:text-error"
-          onClick={handleLogout}
-        >
-          <i className="ri-logout-box-line mr-2"></i>
-          <span>Logout</span>
-        </button>
-      </div>
-    </div>
+    </>
   );
 }

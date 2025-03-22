@@ -1,118 +1,117 @@
-import { 
-  User, InsertUser, 
-  TimeEntry, InsertTimeEntry,
-  Expense, InsertExpense,
-  Travel, InsertTravel,
-  Leave, InsertLeave,
-  Project, InsertProject
-} from "@shared/schema";
+import { users, type User, type InsertUser } from "@shared/schema";
+import { projects, type Project, type InsertProject } from "@shared/schema";
+import { activityTypes, type ActivityType, type InsertActivityType } from "@shared/schema";
+import { timeEntries, type TimeEntry, type InsertTimeEntry } from "@shared/schema";
+import { expenses, type Expense, type InsertExpense } from "@shared/schema";
+import { trips, type Trip, type InsertTrip } from "@shared/schema";
+import { leaveRequests, type LeaveRequest, type InsertLeaveRequest } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
 const MemoryStore = createMemoryStore(session);
 
-// Storage interface
 export interface IStorage {
-  // Session store
-  sessionStore: session.SessionStore;
-
   // User methods
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
-
-  // TimeEntry methods
-  getTimeEntries(userId: number): Promise<TimeEntry[]>;
-  getTimeEntry(id: number): Promise<TimeEntry | undefined>;
-  createTimeEntry(entry: InsertTimeEntry): Promise<TimeEntry>;
-  updateTimeEntry(id: number, entry: Partial<TimeEntry>): Promise<TimeEntry | undefined>;
-  deleteTimeEntry(id: number): Promise<boolean>;
-
-  // Expense methods
-  getExpenses(userId: number): Promise<Expense[]>;
-  getExpense(id: number): Promise<Expense | undefined>;
-  createExpense(expense: InsertExpense): Promise<Expense>;
-  updateExpense(id: number, expense: Partial<Expense>): Promise<Expense | undefined>;
-  deleteExpense(id: number): Promise<boolean>;
-
-  // Travel methods
-  getTravels(userId: number): Promise<Travel[]>;
-  getTravel(id: number): Promise<Travel | undefined>;
-  createTravel(travel: InsertTravel): Promise<Travel>;
-  updateTravel(id: number, travel: Partial<Travel>): Promise<Travel | undefined>;
-  deleteTravel(id: number): Promise<boolean>;
-
-  // Leave methods
-  getLeaves(userId: number): Promise<Leave[]>;
-  getLeave(id: number): Promise<Leave | undefined>;
-  createLeave(leave: InsertLeave): Promise<Leave>;
-  updateLeave(id: number, leave: Partial<Leave>): Promise<Leave | undefined>;
-  deleteLeave(id: number): Promise<boolean>;
-
+  
   // Project methods
-  getProjects(): Promise<Project[]>;
   getProject(id: number): Promise<Project | undefined>;
+  getProjects(): Promise<Project[]>;
   createProject(project: InsertProject): Promise<Project>;
-  updateProject(id: number, project: Partial<Project>): Promise<Project | undefined>;
-  deleteProject(id: number): Promise<boolean>;
+  
+  // Activity Type methods
+  getActivityType(id: number): Promise<ActivityType | undefined>;
+  getActivityTypes(): Promise<ActivityType[]>;
+  getActivityTypesByCategory(category: string): Promise<ActivityType[]>;
+  createActivityType(activityType: InsertActivityType): Promise<ActivityType>;
+  
+  // Time Entry methods
+  getTimeEntry(id: number): Promise<TimeEntry | undefined>;
+  getTimeEntriesByUser(userId: number): Promise<TimeEntry[]>;
+  getTimeEntriesByUserAndDateRange(userId: number, startDate: Date, endDate: Date): Promise<TimeEntry[]>;
+  createTimeEntry(timeEntry: InsertTimeEntry): Promise<TimeEntry>;
+  updateTimeEntryStatus(id: number, status: string): Promise<TimeEntry | undefined>;
+  
+  // Expense methods
+  getExpense(id: number): Promise<Expense | undefined>;
+  getExpensesByUser(userId: number): Promise<Expense[]>;
+  getExpensesByUserAndDateRange(userId: number, startDate: Date, endDate: Date): Promise<Expense[]>;
+  createExpense(expense: InsertExpense): Promise<Expense>;
+  updateExpenseStatus(id: number, status: string): Promise<Expense | undefined>;
+  
+  // Trip methods
+  getTrip(id: number): Promise<Trip | undefined>;
+  getTripsByUser(userId: number): Promise<Trip[]>;
+  getTripsByUserAndStatus(userId: number, status: string): Promise<Trip[]>;
+  createTrip(trip: InsertTrip): Promise<Trip>;
+  updateTripStatus(id: number, status: string): Promise<Trip | undefined>;
+  
+  // Leave Request methods
+  getLeaveRequest(id: number): Promise<LeaveRequest | undefined>;
+  getLeaveRequestsByUser(userId: number): Promise<LeaveRequest[]>;
+  getLeaveRequestsByUserAndDateRange(userId: number, startDate: Date, endDate: Date): Promise<LeaveRequest[]>;
+  createLeaveRequest(leaveRequest: InsertLeaveRequest): Promise<LeaveRequest>;
+  updateLeaveRequestStatus(id: number, status: string): Promise<LeaveRequest | undefined>;
+  
+  // Session store
+  sessionStore: session.SessionStore;
 }
 
-// In-memory storage implementation
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
+  private projects: Map<number, Project>;
+  private activityTypes: Map<number, ActivityType>;
   private timeEntries: Map<number, TimeEntry>;
   private expenses: Map<number, Expense>;
-  private travels: Map<number, Travel>;
-  private leaves: Map<number, Leave>;
-  private projects: Map<number, Project>;
+  private trips: Map<number, Trip>;
+  private leaveRequests: Map<number, LeaveRequest>;
   
   sessionStore: session.SessionStore;
   
   private userCurrentId: number;
+  private projectCurrentId: number;
+  private activityTypeCurrentId: number;
   private timeEntryCurrentId: number;
   private expenseCurrentId: number;
-  private travelCurrentId: number;
-  private leaveCurrentId: number;
-  private projectCurrentId: number;
+  private tripCurrentId: number;
+  private leaveRequestCurrentId: number;
 
   constructor() {
     this.users = new Map();
+    this.projects = new Map();
+    this.activityTypes = new Map();
     this.timeEntries = new Map();
     this.expenses = new Map();
-    this.travels = new Map();
-    this.leaves = new Map();
-    this.projects = new Map();
+    this.trips = new Map();
+    this.leaveRequests = new Map();
     
     this.userCurrentId = 1;
+    this.projectCurrentId = 1;
+    this.activityTypeCurrentId = 1;
     this.timeEntryCurrentId = 1;
     this.expenseCurrentId = 1;
-    this.travelCurrentId = 1;
-    this.leaveCurrentId = 1;
-    this.projectCurrentId = 1;
+    this.tripCurrentId = 1;
+    this.leaveRequestCurrentId = 1;
     
     this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000 // 24 hours
+      checkPeriod: 86400000, // prune expired entries every 24h
     });
     
-    // Create a default project
-    this.createProject({
-      name: "App Mobile Ecommerce",
-      description: "Development of a mobile e-commerce application",
-      startDate: new Date("2023-07-01"),
-      endDate: new Date("2023-08-31"),
-      status: "in_progress",
-      progress: 75
-    });
+    // Initialize default activity types
+    this.createActivityType({ name: "Development", category: "work", description: "Software development tasks" });
+    this.createActivityType({ name: "Meeting", category: "work", description: "Team or client meetings" });
+    this.createActivityType({ name: "Testing", category: "work", description: "QA and testing tasks" });
+    this.createActivityType({ name: "Vacation", category: "time_off", description: "Vacation days" });
+    this.createActivityType({ name: "Sick Leave", category: "time_off", description: "Sick leave days" });
+    this.createActivityType({ name: "Personal Leave", category: "time_off", description: "Personal time off" });
     
-    this.createProject({
-      name: "Sistema gestionale interno",
-      description: "Internal management system for the company",
-      startDate: new Date("2023-08-15"),
-      endDate: new Date("2023-11-30"),
-      status: "planning",
-      progress: 10
-    });
+    // Initialize default projects
+    this.createProject({ name: "Internal", description: "Internal company activities", client: "Our Company", status: "active" });
+    this.createProject({ name: "App E-commerce", description: "E-commerce mobile app", client: "Client XYZ", status: "active" });
+    this.createProject({ name: "Portale Aziendale", description: "Company portal project", client: "Client ABC", status: "active" });
+    this.createProject({ name: "Sistema CRM", description: "CRM System development", client: "Client DEF", status: "active" });
   }
 
   // User methods
@@ -121,8 +120,8 @@ export class MemStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return [...this.users.values()].find(
-      (user) => user.username.toLowerCase() === username.toLowerCase()
+    return Array.from(this.users.values()).find(
+      (user) => user.username === username,
     );
   }
 
@@ -132,159 +131,196 @@ export class MemStorage implements IStorage {
     this.users.set(id, user);
     return user;
   }
-
-  async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
-    const user = this.users.get(id);
-    if (!user) return undefined;
-    
-    const updatedUser = { ...user, ...userData };
-    this.users.set(id, updatedUser);
-    return updatedUser;
-  }
-
-  // TimeEntry methods
-  async getTimeEntries(userId: number): Promise<TimeEntry[]> {
-    return [...this.timeEntries.values()].filter(entry => entry.userId === userId);
-  }
-
-  async getTimeEntry(id: number): Promise<TimeEntry | undefined> {
-    return this.timeEntries.get(id);
-  }
-
-  async createTimeEntry(entry: InsertTimeEntry): Promise<TimeEntry> {
-    const id = this.timeEntryCurrentId++;
-    const timeEntry: TimeEntry = { ...entry, id };
-    this.timeEntries.set(id, timeEntry);
-    return timeEntry;
-  }
-
-  async updateTimeEntry(id: number, entryData: Partial<TimeEntry>): Promise<TimeEntry | undefined> {
-    const entry = this.timeEntries.get(id);
-    if (!entry) return undefined;
-    
-    const updatedEntry = { ...entry, ...entryData };
-    this.timeEntries.set(id, updatedEntry);
-    return updatedEntry;
-  }
-
-  async deleteTimeEntry(id: number): Promise<boolean> {
-    return this.timeEntries.delete(id);
-  }
-
-  // Expense methods
-  async getExpenses(userId: number): Promise<Expense[]> {
-    return [...this.expenses.values()].filter(expense => expense.userId === userId);
-  }
-
-  async getExpense(id: number): Promise<Expense | undefined> {
-    return this.expenses.get(id);
-  }
-
-  async createExpense(expense: InsertExpense): Promise<Expense> {
-    const id = this.expenseCurrentId++;
-    const newExpense: Expense = { ...expense, id };
-    this.expenses.set(id, newExpense);
-    return newExpense;
-  }
-
-  async updateExpense(id: number, expenseData: Partial<Expense>): Promise<Expense | undefined> {
-    const expense = this.expenses.get(id);
-    if (!expense) return undefined;
-    
-    const updatedExpense = { ...expense, ...expenseData };
-    this.expenses.set(id, updatedExpense);
-    return updatedExpense;
-  }
-
-  async deleteExpense(id: number): Promise<boolean> {
-    return this.expenses.delete(id);
-  }
-
-  // Travel methods
-  async getTravels(userId: number): Promise<Travel[]> {
-    return [...this.travels.values()].filter(travel => travel.userId === userId);
-  }
-
-  async getTravel(id: number): Promise<Travel | undefined> {
-    return this.travels.get(id);
-  }
-
-  async createTravel(travel: InsertTravel): Promise<Travel> {
-    const id = this.travelCurrentId++;
-    const newTravel: Travel = { ...travel, id };
-    this.travels.set(id, newTravel);
-    return newTravel;
-  }
-
-  async updateTravel(id: number, travelData: Partial<Travel>): Promise<Travel | undefined> {
-    const travel = this.travels.get(id);
-    if (!travel) return undefined;
-    
-    const updatedTravel = { ...travel, ...travelData };
-    this.travels.set(id, updatedTravel);
-    return updatedTravel;
-  }
-
-  async deleteTravel(id: number): Promise<boolean> {
-    return this.travels.delete(id);
-  }
-
-  // Leave methods
-  async getLeaves(userId: number): Promise<Leave[]> {
-    return [...this.leaves.values()].filter(leave => leave.userId === userId);
-  }
-
-  async getLeave(id: number): Promise<Leave | undefined> {
-    return this.leaves.get(id);
-  }
-
-  async createLeave(leave: InsertLeave): Promise<Leave> {
-    const id = this.leaveCurrentId++;
-    const newLeave: Leave = { ...leave, id };
-    this.leaves.set(id, newLeave);
-    return newLeave;
-  }
-
-  async updateLeave(id: number, leaveData: Partial<Leave>): Promise<Leave | undefined> {
-    const leave = this.leaves.get(id);
-    if (!leave) return undefined;
-    
-    const updatedLeave = { ...leave, ...leaveData };
-    this.leaves.set(id, updatedLeave);
-    return updatedLeave;
-  }
-
-  async deleteLeave(id: number): Promise<boolean> {
-    return this.leaves.delete(id);
-  }
-
+  
   // Project methods
-  async getProjects(): Promise<Project[]> {
-    return [...this.projects.values()];
-  }
-
   async getProject(id: number): Promise<Project | undefined> {
     return this.projects.get(id);
   }
-
+  
+  async getProjects(): Promise<Project[]> {
+    return Array.from(this.projects.values());
+  }
+  
   async createProject(project: InsertProject): Promise<Project> {
     const id = this.projectCurrentId++;
     const newProject: Project = { ...project, id };
     this.projects.set(id, newProject);
     return newProject;
   }
-
-  async updateProject(id: number, projectData: Partial<Project>): Promise<Project | undefined> {
-    const project = this.projects.get(id);
-    if (!project) return undefined;
-    
-    const updatedProject = { ...project, ...projectData };
-    this.projects.set(id, updatedProject);
-    return updatedProject;
+  
+  // Activity Type methods
+  async getActivityType(id: number): Promise<ActivityType | undefined> {
+    return this.activityTypes.get(id);
   }
-
-  async deleteProject(id: number): Promise<boolean> {
-    return this.projects.delete(id);
+  
+  async getActivityTypes(): Promise<ActivityType[]> {
+    return Array.from(this.activityTypes.values());
+  }
+  
+  async getActivityTypesByCategory(category: string): Promise<ActivityType[]> {
+    return Array.from(this.activityTypes.values()).filter(
+      (type) => type.category === category
+    );
+  }
+  
+  async createActivityType(activityType: InsertActivityType): Promise<ActivityType> {
+    const id = this.activityTypeCurrentId++;
+    const newType: ActivityType = { ...activityType, id };
+    this.activityTypes.set(id, newType);
+    return newType;
+  }
+  
+  // Time Entry methods
+  async getTimeEntry(id: number): Promise<TimeEntry | undefined> {
+    return this.timeEntries.get(id);
+  }
+  
+  async getTimeEntriesByUser(userId: number): Promise<TimeEntry[]> {
+    return Array.from(this.timeEntries.values()).filter(
+      (entry) => entry.userId === userId
+    );
+  }
+  
+  async getTimeEntriesByUserAndDateRange(userId: number, startDate: Date, endDate: Date): Promise<TimeEntry[]> {
+    return Array.from(this.timeEntries.values()).filter(
+      (entry) => {
+        const entryDate = new Date(entry.date);
+        return entry.userId === userId && 
+          entryDate >= startDate && 
+          entryDate <= endDate;
+      }
+    );
+  }
+  
+  async createTimeEntry(timeEntry: InsertTimeEntry): Promise<TimeEntry> {
+    const id = this.timeEntryCurrentId++;
+    const createdAt = new Date();
+    const newEntry: TimeEntry = { ...timeEntry, id, createdAt };
+    this.timeEntries.set(id, newEntry);
+    return newEntry;
+  }
+  
+  async updateTimeEntryStatus(id: number, status: string): Promise<TimeEntry | undefined> {
+    const entry = this.timeEntries.get(id);
+    if (entry) {
+      const updatedEntry = { ...entry, status };
+      this.timeEntries.set(id, updatedEntry);
+      return updatedEntry;
+    }
+    return undefined;
+  }
+  
+  // Expense methods
+  async getExpense(id: number): Promise<Expense | undefined> {
+    return this.expenses.get(id);
+  }
+  
+  async getExpensesByUser(userId: number): Promise<Expense[]> {
+    return Array.from(this.expenses.values()).filter(
+      (expense) => expense.userId === userId
+    );
+  }
+  
+  async getExpensesByUserAndDateRange(userId: number, startDate: Date, endDate: Date): Promise<Expense[]> {
+    return Array.from(this.expenses.values()).filter(
+      (expense) => {
+        const expenseDate = new Date(expense.date);
+        return expense.userId === userId && 
+          expenseDate >= startDate && 
+          expenseDate <= endDate;
+      }
+    );
+  }
+  
+  async createExpense(expense: InsertExpense): Promise<Expense> {
+    const id = this.expenseCurrentId++;
+    const createdAt = new Date();
+    const newExpense: Expense = { ...expense, id, createdAt };
+    this.expenses.set(id, newExpense);
+    return newExpense;
+  }
+  
+  async updateExpenseStatus(id: number, status: string): Promise<Expense | undefined> {
+    const expense = this.expenses.get(id);
+    if (expense) {
+      const updatedExpense = { ...expense, status };
+      this.expenses.set(id, updatedExpense);
+      return updatedExpense;
+    }
+    return undefined;
+  }
+  
+  // Trip methods
+  async getTrip(id: number): Promise<Trip | undefined> {
+    return this.trips.get(id);
+  }
+  
+  async getTripsByUser(userId: number): Promise<Trip[]> {
+    return Array.from(this.trips.values()).filter(
+      (trip) => trip.userId === userId
+    );
+  }
+  
+  async getTripsByUserAndStatus(userId: number, status: string): Promise<Trip[]> {
+    return Array.from(this.trips.values()).filter(
+      (trip) => trip.userId === userId && trip.status === status
+    );
+  }
+  
+  async createTrip(trip: InsertTrip): Promise<Trip> {
+    const id = this.tripCurrentId++;
+    const createdAt = new Date();
+    const newTrip: Trip = { ...trip, id, createdAt };
+    this.trips.set(id, newTrip);
+    return newTrip;
+  }
+  
+  async updateTripStatus(id: number, status: string): Promise<Trip | undefined> {
+    const trip = this.trips.get(id);
+    if (trip) {
+      const updatedTrip = { ...trip, status };
+      this.trips.set(id, updatedTrip);
+      return updatedTrip;
+    }
+    return undefined;
+  }
+  
+  // Leave Request methods
+  async getLeaveRequest(id: number): Promise<LeaveRequest | undefined> {
+    return this.leaveRequests.get(id);
+  }
+  
+  async getLeaveRequestsByUser(userId: number): Promise<LeaveRequest[]> {
+    return Array.from(this.leaveRequests.values()).filter(
+      (request) => request.userId === userId
+    );
+  }
+  
+  async getLeaveRequestsByUserAndDateRange(userId: number, startDate: Date, endDate: Date): Promise<LeaveRequest[]> {
+    return Array.from(this.leaveRequests.values()).filter(
+      (request) => {
+        return request.userId === userId && 
+          ((new Date(request.startDate) <= endDate && new Date(request.endDate) >= startDate));
+      }
+    );
+  }
+  
+  async createLeaveRequest(leaveRequest: InsertLeaveRequest): Promise<LeaveRequest> {
+    const id = this.leaveRequestCurrentId++;
+    const createdAt = new Date();
+    const newRequest: LeaveRequest = { ...leaveRequest, id, createdAt };
+    this.leaveRequests.set(id, newRequest);
+    return newRequest;
+  }
+  
+  async updateLeaveRequestStatus(id: number, status: string): Promise<LeaveRequest | undefined> {
+    const request = this.leaveRequests.get(id);
+    if (request) {
+      const updatedRequest = { ...request, status };
+      this.leaveRequests.set(id, updatedRequest);
+      return updatedRequest;
+    }
+    return undefined;
   }
 }
 
