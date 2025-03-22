@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { format, parseISO, startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns";
 import { it } from "date-fns/locale";
-import { CalendarIcon, ChevronLeft, ChevronRight, Search, Filter, Loader2, Plus, Receipt, Trash2, Download, Eye } from "lucide-react";
+import { CalendarIcon, ChevronLeft, ChevronRight, Search, Filter, Loader2, Plus, Receipt, Trash2, Download, Eye, Pencil } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -444,51 +444,106 @@ export default function Expenses() {
                               )}
                             </TableCell>
                             <TableCell>
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader>
-                                    <DialogTitle>Dettagli Nota Spesa</DialogTitle>
-                                  </DialogHeader>
-                                  <div className="space-y-4 py-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                      <div>
-                                        <div className="font-medium text-sm">Data</div>
-                                        <div>{format(new Date(expense.date), "dd/MM/yyyy")}</div>
+                              <div className="flex items-center space-x-1">
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader>
+                                      <DialogTitle>Dettagli Nota Spesa</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-4 py-4">
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                          <div className="font-medium text-sm">Data</div>
+                                          <div>{format(new Date(expense.date), "dd/MM/yyyy")}</div>
+                                        </div>
+                                        <div>
+                                          <div className="font-medium text-sm">Importo</div>
+                                          <div>€{Number(expense.amount).toFixed(2)}</div>
+                                        </div>
                                       </div>
                                       <div>
-                                        <div className="font-medium text-sm">Importo</div>
-                                        <div>€{Number(expense.amount).toFixed(2)}</div>
+                                        <div className="font-medium text-sm">Categoria</div>
+                                        <div>{getCategoryLabel(expense.category)}</div>
                                       </div>
-                                    </div>
-                                    <div>
-                                      <div className="font-medium text-sm">Categoria</div>
-                                      <div>{getCategoryLabel(expense.category)}</div>
-                                    </div>
-                                    <div>
-                                      <div className="font-medium text-sm">Descrizione</div>
-                                      <div>{expense.description}</div>
-                                    </div>
-                                    {expense.tripId && (
                                       <div>
-                                        <div className="font-medium text-sm">Trasferta Collegata</div>
-                                        <div>{getTripDestination(expense.tripId)}</div>
+                                        <div className="font-medium text-sm">Descrizione</div>
+                                        <div>{expense.description}</div>
                                       </div>
-                                    )}
-                                    <div>
-                                      <div className="font-medium text-sm">Stato</div>
-                                      <div>{getStatusBadge(expense.status)}</div>
+                                      {expense.tripId && (
+                                        <div>
+                                          <div className="font-medium text-sm">Trasferta Collegata</div>
+                                          <div>{getTripDestination(expense.tripId)}</div>
+                                        </div>
+                                      )}
+                                      <div>
+                                        <div className="font-medium text-sm">Stato</div>
+                                        <div>{getStatusBadge(expense.status)}</div>
+                                      </div>
                                     </div>
-                                  </div>
-                                  <DialogFooter>
-                                    <Button variant="outline" onClick={() => {}}>Chiudi</Button>
-                                  </DialogFooter>
-                                </DialogContent>
-                              </Dialog>
+                                    <DialogFooter>
+                                      <DialogClose asChild>
+                                        <Button variant="outline">Chiudi</Button>
+                                      </DialogClose>
+                                    </DialogFooter>
+                                  </DialogContent>
+                                </Dialog>
+                                
+                                {/* Pulsanti per modificare e cancellare (solo se non approvato) */}
+                                {expense.status === 'pending' && (
+                                  <>
+                                    <Dialog>
+                                      <DialogTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Modifica">
+                                          <Pencil className="h-4 w-4" />
+                                        </Button>
+                                      </DialogTrigger>
+                                      <DialogContent>
+                                        <DialogHeader>
+                                          <DialogTitle>Modifica Nota Spesa</DialogTitle>
+                                        </DialogHeader>
+                                        <div className="py-4">
+                                          <p className="text-neutral-500 mb-4">Funzionalità di modifica in fase di implementazione.</p>
+                                        </div>
+                                        <DialogFooter>
+                                          <DialogClose asChild>
+                                            <Button variant="outline">Annulla</Button>
+                                          </DialogClose>
+                                        </DialogFooter>
+                                      </DialogContent>
+                                    </Dialog>
+                                    
+                                    <Dialog>
+                                      <DialogTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-500" title="Elimina">
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </DialogTrigger>
+                                      <DialogContent>
+                                        <DialogHeader>
+                                          <DialogTitle>Conferma Eliminazione</DialogTitle>
+                                        </DialogHeader>
+                                        <div className="py-4">
+                                          <p>Sei sicuro di voler eliminare questa nota spesa?</p>
+                                          <p className="text-neutral-500 mt-2">Questa azione non può essere annullata.</p>
+                                        </div>
+                                        <DialogFooter>
+                                          <DialogClose asChild>
+                                            <Button variant="outline">Annulla</Button>
+                                          </DialogClose>
+                                          <DialogClose asChild>
+                                            <Button variant="destructive">Elimina</Button>
+                                          </DialogClose>
+                                        </DialogFooter>
+                                      </DialogContent>
+                                    </Dialog>
+                                  </>
+                                )}
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))

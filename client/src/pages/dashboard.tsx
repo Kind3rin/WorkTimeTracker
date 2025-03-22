@@ -173,7 +173,21 @@ export default function Dashboard() {
   
   const isLoading = isLoadingTimeEntries || isLoadingExpenses || isLoadingLeave || isLoadingTrips;
   
-  if (isLoading) {
+  // Imposta un timeout di 10 secondi per evitare il caricamento infinito
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isLoading) {
+        console.log("Timeout del caricamento della dashboard attivato");
+        setLoadingTimeout(true);
+      }
+    }, 10000);
+    
+    return () => clearTimeout(timer);
+  }, [isLoading]);
+  
+  if (isLoading && !loadingTimeout) {
     return (
       <div className="flex min-h-screen">
         <Sidebar />
