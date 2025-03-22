@@ -265,17 +265,17 @@ export default function SickleavePage() {
   });
 
   return (
-    <div className="flex min-h-screen bg-neutral-50">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-neutral-50">
       <Sidebar />
       
-      <div className="lg:ml-64 flex-1">
+      <div className="flex-1 overflow-hidden">
         <TopBar />
         
-        <div className="p-6">
-          <header className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="p-4 sm:p-6 overflow-y-auto">
+          <header className="mb-4 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-semibold text-neutral-800">Malattia</h1>
-              <p className="text-neutral-500">Gestisci le tue richieste di malattia</p>
+              <h1 className="text-xl sm:text-2xl font-semibold text-neutral-800">Malattia</h1>
+              <p className="text-sm text-neutral-500">Gestisci le tue richieste di malattia</p>
             </div>
             
             <Button onClick={() => {
@@ -286,14 +286,14 @@ export default function SickleavePage() {
               });
               setIsEditing(false);
               setIsFormOpen(true);
-            }} className="w-full md:w-auto">
+            }} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Nuova richiesta
             </Button>
           </header>
           
-          <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-grid">
+          <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+            <TabsList className="grid w-full grid-cols-3 overflow-x-auto text-xs sm:text-sm md:w-auto md:inline-grid">
               <TabsTrigger value="all">Tutte</TabsTrigger>
               <TabsTrigger value="pending">In attesa</TabsTrigger>
               <TabsTrigger value="approved">Approvate</TabsTrigger>
@@ -325,16 +325,16 @@ export default function SickleavePage() {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                   {filteredSickLeaves.map((sickLeave) => (
                     <Card key={sickLeave.id} className="overflow-hidden">
                       <CardHeader className="pb-2">
-                        <div className="flex justify-between items-start">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                           <div>
-                            <CardTitle className="text-lg mb-1">
+                            <CardTitle className="text-base sm:text-lg mb-1">
                               Malattia - Prot. {sickLeave.protocolNumber}
                             </CardTitle>
-                            <CardDescription>
+                            <CardDescription className="text-xs sm:text-sm">
                               Richiesta del {format(new Date(sickLeave.createdAt), "d MMMM yyyy", { locale: it })}
                             </CardDescription>
                           </div>
@@ -371,20 +371,20 @@ export default function SickleavePage() {
                           )}
                         </div>
                       </CardContent>
-                      <CardFooter className="pt-4 flex justify-between">
+                      <CardFooter className="pt-4 flex flex-wrap justify-between gap-2">
                         <Button variant="ghost" size="sm" onClick={() => openDetailModal(sickLeave)}>
-                          <FileText className="h-4 w-4 mr-2" />
-                          Dettagli
+                          <FileText className="h-4 w-4 mr-1 sm:mr-2" />
+                          <span className="text-xs sm:text-sm">Dettagli</span>
                         </Button>
                         {sickLeave.status === "pending" && (
-                          <div className="flex space-x-2">
+                          <div className="flex flex-wrap gap-2">
                             <Button variant="ghost" size="sm" onClick={() => openEditModal(sickLeave)}>
-                              <FilePenLine className="h-4 w-4 mr-2" />
-                              Modifica
+                              <FilePenLine className="h-4 w-4 mr-1 sm:mr-2" />
+                              <span className="text-xs sm:text-sm">Modifica</span>
                             </Button>
                             <Button variant="ghost" size="sm" onClick={() => openDeleteAlert(sickLeave)}>
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Elimina
+                              <Trash2 className="h-4 w-4 mr-1 sm:mr-2" />
+                              <span className="text-xs sm:text-sm">Elimina</span>
                             </Button>
                           </div>
                         )}

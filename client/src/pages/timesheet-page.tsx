@@ -63,7 +63,7 @@ export default function TimesheetPage() {
     queryKey: ["/api/time-entries"],
   });
 
-  const { data: projects } = useQuery({
+  const { data: projects = [] } = useQuery<any[]>({
     queryKey: ["/api/projects"],
   });
 
