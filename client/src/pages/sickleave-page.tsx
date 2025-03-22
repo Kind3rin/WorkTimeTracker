@@ -340,9 +340,10 @@ export default function SickleavePage() {
                           </div>
                           <Badge 
                             variant={
-                              sickLeave.status === "approved" ? "success" :
+                              sickLeave.status === "approved" ? "default" :
                               sickLeave.status === "rejected" ? "destructive" : "outline"
                             }
+                            className={sickLeave.status === "approved" ? "bg-green-500 hover:bg-green-600" : ""}
                           >
                             {sickLeave.status === "pending" ? "In attesa" :
                              sickLeave.status === "approved" ? "Approvata" : "Respinta"}

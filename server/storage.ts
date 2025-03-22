@@ -5,6 +5,7 @@ import { timeEntries, type TimeEntry, type InsertTimeEntry } from "@shared/schem
 import { expenses, type Expense, type InsertExpense } from "@shared/schema";
 import { trips, type Trip, type InsertTrip } from "@shared/schema";
 import { leaveRequests, type LeaveRequest, type InsertLeaveRequest } from "@shared/schema";
+import { sickLeaves, type SickLeave, type InsertSickLeave } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
@@ -55,6 +56,14 @@ export interface IStorage {
   createLeaveRequest(leaveRequest: InsertLeaveRequest): Promise<LeaveRequest>;
   updateLeaveRequestStatus(id: number, status: string): Promise<LeaveRequest | undefined>;
   
+  // Sick Leave methods
+  getSickLeave(id: number): Promise<SickLeave | undefined>;
+  getSickLeavesByUser(userId: number): Promise<SickLeave[]>;
+  getSickLeavesByUserAndDateRange(userId: number, startDate: Date, endDate: Date): Promise<SickLeave[]>;
+  createSickLeave(sickLeave: InsertSickLeave): Promise<SickLeave>;
+  updateSickLeave(id: number, sickLeave: Partial<InsertSickLeave>): Promise<SickLeave | undefined>;
+  deleteSickLeave(id: number): Promise<boolean>;
+  
   // Session store
   sessionStore: session.SessionStore;
 }
@@ -67,6 +76,7 @@ export class MemStorage implements IStorage {
   private expenses: Map<number, Expense>;
   private trips: Map<number, Trip>;
   private leaveRequests: Map<number, LeaveRequest>;
+  private sickLeaves: Map<number, SickLeave>;
   
   sessionStore: session.SessionStore;
   
@@ -77,6 +87,7 @@ export class MemStorage implements IStorage {
   private expenseCurrentId: number;
   private tripCurrentId: number;
   private leaveRequestCurrentId: number;
+  private sickLeaveCurrentId: number;
 
   constructor() {
     this.users = new Map();
@@ -86,6 +97,7 @@ export class MemStorage implements IStorage {
     this.expenses = new Map();
     this.trips = new Map();
     this.leaveRequests = new Map();
+    this.sickLeaves = new Map();
     
     this.userCurrentId = 1;
     this.projectCurrentId = 1;
@@ -94,6 +106,7 @@ export class MemStorage implements IStorage {
     this.expenseCurrentId = 1;
     this.tripCurrentId = 1;
     this.leaveRequestCurrentId = 1;
+    this.sickLeaveCurrentId = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // prune expired entries every 24h
@@ -321,6 +334,48 @@ export class MemStorage implements IStorage {
       return updatedRequest;
     }
     return undefined;
+  }
+  
+  // Sick Leave methods
+  async getSickLeave(id: number): Promise<SickLeave | undefined> {
+    return this.sickLeaves.get(id);
+  }
+  
+  async getSickLeavesByUser(userId: number): Promise<SickLeave[]> {
+    return Array.from(this.sickLeaves.values()).filter(
+      (leave) => leave.userId === userId
+    );
+  }
+  
+  async getSickLeavesByUserAndDateRange(userId: number, startDate: Date, endDate: Date): Promise<SickLeave[]> {
+    return Array.from(this.sickLeaves.values()).filter(
+      (leave) => {
+        return leave.userId === userId && 
+          ((new Date(leave.startDate) <= endDate && new Date(leave.endDate) >= startDate));
+      }
+    );
+  }
+  
+  async createSickLeave(sickLeave: InsertSickLeave): Promise<SickLeave> {
+    const id = this.sickLeaveCurrentId++;
+    const createdAt = new Date();
+    const newSickLeave: SickLeave = { ...sickLeave, id, createdAt };
+    this.sickLeaves.set(id, newSickLeave);
+    return newSickLeave;
+  }
+  
+  async updateSickLeave(id: number, sickLeave: Partial<InsertSickLeave>): Promise<SickLeave | undefined> {
+    const leave = this.sickLeaves.get(id);
+    if (leave) {
+      const updatedLeave = { ...leave, ...sickLeave };
+      this.sickLeaves.set(id, updatedLeave);
+      return updatedLeave;
+    }
+    return undefined;
+  }
+  
+  async deleteSickLeave(id: number): Promise<boolean> {
+    return this.sickLeaves.delete(id);
   }
 }
 
