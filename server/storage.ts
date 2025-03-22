@@ -134,6 +134,17 @@ export class MemStorage implements IStorage {
     this.createProject({ name: "App E-commerce", description: "E-commerce mobile app", client: "Client XYZ", status: "active" });
     this.createProject({ name: "Portale Aziendale", description: "Company portal project", client: "Client ABC", status: "active" });
     this.createProject({ name: "Sistema CRM", description: "CRM System development", client: "Client DEF", status: "active" });
+    
+    // Crea l'utente amministratore di default
+    // In una implementazione reale, questa password dovrebbe essere caricata da una variabile d'ambiente
+    // o un file di configurazione protetto
+    this.createUser({
+      username: "admin",
+      password: "$2b$10$mMJUKsEzyCOOXRur5CR3oeYjnLzx/mVzYPvkQStm3P0G0CNLCL.PK", // password: "admin123"
+      fullName: "Amministratore",
+      role: "admin",
+      needsPasswordChange: true // Forza il cambio password al primo accesso
+    });
   }
 
   // User methods

@@ -3,7 +3,7 @@ import { User } from "@shared/schema";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Loader2, UserPlus, Shield, Key } from "lucide-react";
+import { Loader2, UserPlus, Shield, Key, RefreshCcw } from "lucide-react";
 
 import {
   Dialog,
@@ -171,8 +171,29 @@ export default function UserManagement() {
     }
   });
 
+  // Funzione per generare una password casuale sicura
+  const generateSecurePassword = (length = 10) => {
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+    let password = "";
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * charset.length);
+      password += charset[randomIndex];
+    }
+    return password;
+  };
+
+  // Genera una nuova password e la imposta nel form
+  const handleGeneratePassword = () => {
+    const newPassword = generateSecurePassword();
+    newUserForm.setValue("password", newPassword);
+  };
+
   const onSubmitNewUser = (data: NewUserFormValues) => {
-    createUserMutation.mutate(data);
+    // Aggiungiamo il flag needsPasswordChange a true per forzare il cambio password al primo accesso
+    createUserMutation.mutate({
+      ...data,
+      needsPasswordChange: true
+    });
   };
 
   const onChangeRole = (data: ChangeRoleFormValues) => {
@@ -326,7 +347,19 @@ export default function UserManagement() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password temporanea</FormLabel>
+                    <div className="flex justify-between items-center">
+                      <FormLabel>Password temporanea</FormLabel>
+                      <Button 
+                        type="button" 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={handleGeneratePassword}
+                        className="h-8 text-xs"
+                      >
+                        <RefreshCcw className="h-3 w-3 mr-1" />
+                        Genera
+                      </Button>
+                    </div>
                     <FormControl>
                       <Input type="password" placeholder="Password" {...field} />
                     </FormControl>
