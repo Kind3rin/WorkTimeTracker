@@ -3,14 +3,14 @@ import { User } from '@shared/schema';
 import crypto from 'crypto';
 
 // Configurazione del trasporto email
-// In produzione, questi valori dovrebbero essere presi da variabili d'ambiente
+// Utilizziamo le credenziali di Brevo
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.example.com',
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_SECURE === 'true',
+  host: process.env.EMAIL_HOST || 'smtp-relay.brevo.com',
+  port: parseInt(process.env.EMAIL_PORT || '587'),
+  secure: false, // TLS
   auth: {
-    user: process.env.SMTP_USER || 'user@example.com',
-    pass: process.env.SMTP_PASSWORD || 'password'
+    user: process.env.EMAIL_USER || '88a8f9001@smtp-brevo.com',
+    pass: process.env.EMAIL_PASS || 'xSgXDMwA7WVpUnvk'
   }
 });
 
@@ -46,7 +46,7 @@ export async function sendInvitationEmail(
         Password temporanea: ${temporaryPassword}
         
         Per accedere, visita il seguente link:
-        http://localhost:5000/invitation/${invitationToken}
+        ${process.env.APP_URL || 'https://8894a171-ba6b-42a6-9d6f-d055b209fdce-00-3fwvy3q9kkmdp.picard.replit.dev'}/invitation/${invitationToken}
         
         La password temporanea e il link di invito scadranno fra 24 ore.
         Ti verrà richiesto di cambiare la password al primo accesso.
@@ -59,7 +59,7 @@ export async function sendInvitationEmail(
     
     // Configurazione dell'email
     const mailOptions = {
-      from: process.env.SMTP_FROM || 'timetracker@example.com',
+      from: process.env.EMAIL_USER || '88a8f9001@smtp-brevo.com',
       to: user.email,
       subject: 'Invito a Time Tracker',
       html: `
@@ -75,7 +75,7 @@ export async function sendInvitationEmail(
           
           <p>Per accedere, clicca sul seguente pulsante:</p>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="http://localhost:5000/invitation/${invitationToken}" 
+            <a href="${process.env.APP_URL || 'https://8894a171-ba6b-42a6-9d6f-d055b209fdce-00-3fwvy3q9kkmdp.picard.replit.dev'}/invitation/${invitationToken}" 
                style="background-color: #3b82f6; color: white; padding: 10px 20px; 
                       text-decoration: none; border-radius: 5px; font-weight: bold;">
               Accedi a Time Tracker
