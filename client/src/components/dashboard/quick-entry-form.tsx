@@ -116,24 +116,24 @@ export default function QuickEntryForm() {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm">
-      <div className="px-6 py-4 border-b">
-        <h2 className="text-lg font-medium">Registra Attività</h2>
+    <div className="bg-white rounded-lg shadow-sm h-full">
+      <div className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-b">
+        <h2 className="text-base sm:text-lg font-medium">Registra Attività</h2>
       </div>
       
-      <div className="p-6">
+      <div className="p-3 sm:p-4 md:p-6">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
             <FormField
               control={form.control}
               name="date"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Data</FormLabel>
+                <FormItem className="space-y-1 sm:space-y-2">
+                  <FormLabel className="text-xs sm:text-sm">Data</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input type="date" className="h-8 sm:h-9 text-xs sm:text-sm" {...field} />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
@@ -142,23 +142,23 @@ export default function QuickEntryForm() {
               control={form.control}
               name="activityTypeId"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo di Attività</FormLabel>
+                <FormItem className="space-y-1 sm:space-y-2">
+                  <FormLabel className="text-xs sm:text-sm">Tipo di Attività</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-8 sm:h-9 text-xs sm:text-sm">
                         <SelectValue placeholder="Seleziona un tipo di attività" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {activityTypes.filter(type => type.category === 'work').map(type => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
+                        <SelectItem key={type.id} value={type.id.toString()} className="text-xs sm:text-sm">
                           {type.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <FormMessage />
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
@@ -167,23 +167,23 @@ export default function QuickEntryForm() {
               control={form.control}
               name="projectId"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Progetto</FormLabel>
+                <FormItem className="space-y-1 sm:space-y-2">
+                  <FormLabel className="text-xs sm:text-sm">Progetto</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-8 sm:h-9 text-xs sm:text-sm">
                         <SelectValue placeholder="Seleziona un progetto" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {projects.map(project => (
-                        <SelectItem key={project.id} value={project.id.toString()}>
+                        <SelectItem key={project.id} value={project.id.toString()} className="text-xs sm:text-sm">
                           {project.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <FormMessage />
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
@@ -192,12 +192,17 @@ export default function QuickEntryForm() {
               control={form.control}
               name="description"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descrizione</FormLabel>
+                <FormItem className="space-y-1 sm:space-y-2">
+                  <FormLabel className="text-xs sm:text-sm">Descrizione</FormLabel>
                   <FormControl>
-                    <Input type="text" placeholder="Descrivi brevemente l'attività..." {...field} />
+                    <Input 
+                      type="text" 
+                      placeholder="Descrivi brevemente l'attività..." 
+                      className="h-8 sm:h-9 text-xs sm:text-sm" 
+                      {...field} 
+                    />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
@@ -206,8 +211,8 @@ export default function QuickEntryForm() {
               control={form.control}
               name="hours"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Ore</FormLabel>
+                <FormItem className="space-y-1 sm:space-y-2">
+                  <FormLabel className="text-xs sm:text-sm">Ore</FormLabel>
                   <FormControl>
                     <Input 
                       type="number" 
@@ -215,17 +220,18 @@ export default function QuickEntryForm() {
                       min="0" 
                       max="24" 
                       placeholder="8.0" 
+                      className="h-8 sm:h-9 text-xs sm:text-sm" 
                       {...field} 
                     />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
             
             <Button 
               type="submit" 
-              className="w-full"
+              className="w-full h-8 sm:h-9 text-xs sm:text-sm mt-2 sm:mt-3"
               disabled={timeEntryMutation.isPending}
             >
               {timeEntryMutation.isPending ? "Registrazione in corso..." : "Registra Attività"}
