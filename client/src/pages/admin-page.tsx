@@ -7,13 +7,46 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
-import { Check, X, Info, Clock, UserCheck } from "lucide-react";
+import { Check, X, Info, Clock, UserCheck, Users, UserPlus, UserCog, Key } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { type ColumnDef } from "@tanstack/react-table";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { 
+  Form, 
+  FormControl, 
+  FormDescription, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+
+// Schema per la creazione di un nuovo utente
+const newUserSchema = z.object({
+  username: z.string().min(3, { message: "Username deve essere almeno 3 caratteri." }),
+  fullName: z.string().min(3, { message: "Nome completo deve essere almeno 3 caratteri." }),
+  password: z.string().min(6, { message: "Password deve essere almeno 6 caratteri." }),
+  role: z.enum(["employee", "admin"]),
+});
+
+// Schema per la modifica del ruolo di un utente
+const changeRoleSchema = z.object({
+  userId: z.number(),
+  role: z.enum(["employee", "admin"]),
+});
+
+// Schema per la generazione di una nuova password
+const resetPasswordSchema = z.object({
+  userId: z.number(),
+});
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -21,6 +54,10 @@ export default function AdminPage() {
   const [selectedTab, setSelectedTab] = useState<string>("timeEntries");
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [detailsOpen, setDetailsOpen] = useState<boolean>(false);
+  const [showNewUserDialog, setShowNewUserDialog] = useState<boolean>(false);
+  const [showChangeRoleDialog, setShowChangeRoleDialog] = useState<boolean>(false);
+  const [showResetPasswordDialog, setShowResetPasswordDialog] = useState<boolean>(false);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
   // Verifica se l'utente è un amministratore
   if (user?.role !== "admin") {
@@ -289,6 +326,129 @@ export default function AdminPage() {
     queryKey: ['/api/admin/users'],
     queryFn: () => apiRequest("GET", `/api/admin/users`).then(res => res.json()),
   });
+
+  // Form per creare un nuovo utente
+  const newUserForm = useForm<z.infer<typeof newUserSchema>>({
+    resolver: zodResolver(newUserSchema),
+    defaultValues: {
+      username: "",
+      fullName: "",
+      password: "",
+      role: "employee"
+    }
+  });
+
+  // Mutazione per creare un nuovo utente
+  const createUserMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof newUserSchema>) => {
+      const res = await apiRequest("POST", `/api/admin/users`, data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Utente creato",
+        description: "L'utente è stato creato con successo",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      setShowNewUserDialog(false);
+      newUserForm.reset();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Errore",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Mutazione per cambiare il ruolo di un utente
+  const changeRoleMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: number, role: string }) => {
+      const res = await apiRequest("PATCH", `/api/admin/users/${userId}/role`, { role });
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Ruolo aggiornato",
+        description: "Il ruolo dell'utente è stato aggiornato con successo",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      setShowChangeRoleDialog(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Errore",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Mutazione per generare una nuova password
+  const resetPasswordMutation = useMutation({
+    mutationFn: async ({ userId }: { userId: number }) => {
+      const res = await apiRequest("POST", `/api/admin/users/${userId}/reset-password`);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Password resettata",
+        description: `La nuova password temporanea è: ${data.temporaryPassword}`,
+      });
+      setShowResetPasswordDialog(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Errore",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Definizione delle colonne per la tabella utenti
+  const userColumns: ColumnDef<any>[] = [
+    {
+      accessorKey: "username",
+      header: "Username",
+    },
+    {
+      accessorKey: "fullName",
+      header: "Nome Completo",
+    },
+    {
+      accessorKey: "role",
+      header: "Ruolo",
+      cell: ({ row }) => (
+        <Badge variant={row.original.role === "admin" ? "success" : "default"}>
+          {row.original.role === "admin" ? "Amministratore" : "Dipendente"}
+        </Badge>
+      ),
+    },
+    {
+      id: "actions",
+      header: "Azioni",
+      cell: ({ row }) => (
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => {
+            setSelectedUserId(row.original.id);
+            setShowChangeRoleDialog(true);
+          }}>
+            <UserCog className="h-4 w-4 mr-2" />
+            Cambia Ruolo
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => {
+            setSelectedUserId(row.original.id);
+            setShowResetPasswordDialog(true);
+          }}>
+            <Key className="h-4 w-4 mr-2" />
+            Reset Password
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   const getUserName = (userId: number) => {
     if (usersQuery.isLoading || !usersQuery.data) return `User #${userId}`;
