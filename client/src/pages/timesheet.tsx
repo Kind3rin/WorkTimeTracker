@@ -381,7 +381,7 @@ export default function Timesheet() {
                       </div>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Tutti i progetti</SelectItem>
+                      <SelectItem value="all">Tutti i progetti</SelectItem>
                       {projects.map(project => (
                         <SelectItem key={project.id} value={project.id.toString()}>
                           {project.name}

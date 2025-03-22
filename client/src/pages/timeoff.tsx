@@ -479,7 +479,7 @@ export default function TimeOff() {
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tutti i tipi</SelectItem>
+                  <SelectItem value="all">Tutti i tipi</SelectItem>
                   {leaveTypes.map(type => (
                     <SelectItem key={type.value} value={type.value}>
                       {type.label}

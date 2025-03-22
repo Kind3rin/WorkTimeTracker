@@ -315,7 +315,7 @@ export default function Expenses() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="">Nessuna trasferta</SelectItem>
+                              <SelectItem value="none">Nessuna trasferta</SelectItem>
                               {trips.map(trip => (
                                 <SelectItem key={trip.id} value={trip.id.toString()}>
                                   {trip.destination} ({format(new Date(trip.startDate), "dd/MM/yyyy")})
@@ -392,7 +392,7 @@ export default function Expenses() {
                       </div>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Tutte le categorie</SelectItem>
+                      <SelectItem value="all">Tutte le categorie</SelectItem>
                       {expenseCategories.map(category => (
                         <SelectItem key={category.value} value={category.value}>
                           {category.label}

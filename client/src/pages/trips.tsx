@@ -357,7 +357,7 @@ export default function Trips() {
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tutti gli stati</SelectItem>
+                  <SelectItem value="all">Tutti gli stati</SelectItem>
                   <SelectItem value="pending">In Attesa</SelectItem>
                   <SelectItem value="approved">Approvato</SelectItem>
                   <SelectItem value="rejected">Rifiutato</SelectItem>
