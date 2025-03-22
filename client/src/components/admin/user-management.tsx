@@ -186,7 +186,9 @@ export default function UserManagement() {
 
   const openRoleDialog = (user: User) => {
     setSelectedUser(user);
-    changeRoleForm.reset({ role: user.role });
+    // Assicuriamoci che user.role sia di tipo "employee" | "admin"
+    const role = user.role === "admin" ? "admin" : "employee";
+    changeRoleForm.reset({ role });
     setIsRoleDialogOpen(true);
   };
 

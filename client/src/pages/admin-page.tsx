@@ -4,10 +4,11 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import UserManagement from "@/components/admin/user-management";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
-import { Check, X, Info, Clock, UserCheck, Users, UserPlus, UserCog, Key } from "lucide-react";
+import { Check, X, Info, Clock, UserCheck, Users, UserPlus, UserCog, Key, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -833,35 +834,14 @@ export default function AdminPage() {
 
         <TabsContent value="users">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Gestione Utenti</CardTitle>
-                <CardDescription>
-                  Gestisci gli utenti del sistema, i loro ruoli e le loro password
-                </CardDescription>
-              </div>
-              <Button onClick={() => setShowNewUserDialog(true)}>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Nuovo Utente
-              </Button>
+            <CardHeader>
+              <CardTitle>Gestione Utenti</CardTitle>
+              <CardDescription>
+                Gestisci gli utenti del sistema, i loro ruoli e le loro password
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              {usersQuery.isLoading ? (
-                <div className="flex items-center justify-center p-6">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : usersQuery.error ? (
-                <div className="text-center p-6 text-destructive">
-                  Errore nel caricamento degli utenti
-                </div>
-              ) : (
-                <DataTable
-                  columns={userColumns}
-                  data={usersQuery.data || []}
-                  searchKey="username"
-                  searchPlaceholder="Cerca utente..."
-                />
-              )}
+              <UserManagement />
             </CardContent>
           </Card>
         </TabsContent>
