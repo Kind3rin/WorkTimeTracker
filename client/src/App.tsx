@@ -15,6 +15,7 @@ import SickleavePage from "@/pages/sickleave-page";
 import Reports from "@/pages/reports";
 import SettingsPage from "@/pages/settings-page";
 import AdminPage from "@/pages/admin-page";
+import { ChangePasswordDialog } from "@/components/change-password-dialog";
 
 function Router() {
   return (

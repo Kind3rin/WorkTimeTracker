@@ -15,9 +15,14 @@ type AuthContextType = {
   loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
+  changePasswordMutation: UseMutationResult<void, Error, ChangePasswordData>;
 };
 
 type LoginData = Pick<InsertUser, "username" | "password">;
+type ChangePasswordData = {
+  currentPassword: string;
+  newPassword: string;
+};
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -92,6 +97,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
   });
+  
+  const changePasswordMutation = useMutation({
+    mutationFn: async (data: ChangePasswordData) => {
+      await apiRequest("POST", "/api/change-password", data);
+    },
+    onSuccess: () => {
+      // Aggiorniamo la query utente per riflettere che non è più necessario cambiare la password
+      if (user) {
+        queryClient.setQueryData(["/api/user"], {
+          ...user,
+          needsPasswordChange: false
+        });
+      }
+      toast({
+        title: "Password aggiornata",
+        description: "La tua password è stata aggiornata con successo.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Cambio password fallito",
+        description: error.message || "La password attuale non è corretta o la nuova password non è valida.",
+        variant: "destructive",
+      });
+    },
+  });
 
   return (
     <AuthContext.Provider
@@ -102,6 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginMutation,
         logoutMutation,
         registerMutation,
+        changePasswordMutation,
       }}
     >
       {children}
