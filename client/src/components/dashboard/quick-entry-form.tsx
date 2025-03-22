@@ -103,13 +103,14 @@ export default function QuickEntryForm() {
       return;
     }
     
+    // Convert date to string format expected by the schema
     timeEntryMutation.mutate({
       userId: user.id,
-      date: new Date(data.date),
+      date: data.date, // send as string
       projectId: parseInt(data.projectId),
       activityTypeId: parseInt(data.activityTypeId),
       description: data.description || "",
-      hours: parseFloat(data.hours),
+      hours: data.hours, // send as string
       status: "pending",
     });
   }
