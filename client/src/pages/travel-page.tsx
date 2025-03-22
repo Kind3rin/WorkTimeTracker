@@ -235,22 +235,22 @@ export default function TravelPage() {
   ];
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-screen overflow-hidden">
       <Sidebar />
       
       <div className="flex-grow flex flex-col h-full overflow-hidden">
         <TopBar />
         
         <main className="flex-grow overflow-y-auto p-4 md:p-6 bg-neutral-lightest">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-6">
             <div>
-              <h1 className="text-2xl font-bold">Trasferte</h1>
-              <p className="text-neutral-medium text-sm">Gestisci le tue trasferte di lavoro</p>
+              <h1 className="text-xl sm:text-2xl font-bold">Trasferte</h1>
+              <p className="text-neutral-medium text-xs sm:text-sm">Gestisci le tue trasferte di lavoro</p>
             </div>
             
             <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
               <DialogTrigger asChild>
-                <Button className="flex items-center">
+                <Button className="w-full sm:w-auto flex items-center justify-center">
                   <i className="ri-add-line mr-1"></i>
                   <span>Nuova Trasferta</span>
                 </Button>
