@@ -47,8 +47,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Utente non trovato" });
       }
       
-      // Importiamo la funzione per confrontare le password
-      const { comparePasswords } = require("./auth");
+      // Importiamo le funzioni per gestire le password
+      const { comparePasswords, hashPassword } = require("./auth");
       
       // Verifichiamo che la password attuale sia corretta
       const isPasswordCorrect = await comparePasswords(currentPassword, user.password);
