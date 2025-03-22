@@ -355,6 +355,12 @@ export class MemStorage implements IStorage {
     return newRequest;
   }
   
+  async getLeaveRequestsByStatus(status: string): Promise<LeaveRequest[]> {
+    return Array.from(this.leaveRequests.values()).filter(
+      (request) => request.status === status
+    );
+  }
+  
   async updateLeaveRequestStatus(id: number, status: string): Promise<LeaveRequest | undefined> {
     const request = this.leaveRequests.get(id);
     if (request) {
@@ -393,10 +399,26 @@ export class MemStorage implements IStorage {
     return newSickLeave;
   }
   
+  async getSickLeavesByStatus(status: string): Promise<SickLeave[]> {
+    return Array.from(this.sickLeaves.values()).filter(
+      (leave) => leave.status === status
+    );
+  }
+  
   async updateSickLeave(id: number, sickLeave: Partial<InsertSickLeave>): Promise<SickLeave | undefined> {
     const leave = this.sickLeaves.get(id);
     if (leave) {
       const updatedLeave = { ...leave, ...sickLeave };
+      this.sickLeaves.set(id, updatedLeave);
+      return updatedLeave;
+    }
+    return undefined;
+  }
+  
+  async updateSickLeaveStatus(id: number, status: string): Promise<SickLeave | undefined> {
+    const leave = this.sickLeaves.get(id);
+    if (leave) {
+      const updatedLeave = { ...leave, status };
       this.sickLeaves.set(id, updatedLeave);
       return updatedLeave;
     }

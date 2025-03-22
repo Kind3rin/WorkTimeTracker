@@ -412,6 +412,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Errore durante il recupero degli utenti" });
     }
   });
+  
+  // API per ottenere tutti i dati in base al tipo (solo admin)
+  app.get("/api/admin/:type", isAdmin, async (req, res) => {
+    try {
+      const { type } = req.params;
+      let data = [];
+      
+      switch (type) {
+        case "timesheet":
+        case "timeEntries":
+          data = await storage.getTimeEntriesByStatus("pending");
+          break;
+        case "expenses":
+          data = await storage.getExpensesByStatus("pending");
+          break;
+        case "trips":
+          data = await storage.getTripsByStatus("pending");
+          break;
+        case "leaveRequests":
+          data = await storage.getLeaveRequestsByStatus("pending");
+          break;
+        case "sickLeaves":
+          data = await storage.getSickLeavesByStatus("pending");
+          break;
+        default:
+          return res.status(400).json({ error: "Tipo non valido" });
+      }
+      
+      res.json(data);
+    } catch (error) {
+      console.error(`Error getting ${req.params.type}:`, error);
+      res.status(500).json({ error: `Errore durante il recupero dei dati di tipo ${req.params.type}` });
+    }
+  });
 
   // API per ottenere tutte le richieste di permesso in pending (solo admin)
   app.get("/api/admin/leave-requests/pending", isAdmin, async (req, res) => {

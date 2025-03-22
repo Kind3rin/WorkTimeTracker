@@ -12,7 +12,8 @@ import {
   Settings, 
   DollarSign,
   LayoutDashboard,
-  Activity
+  Activity,
+  ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -161,6 +162,15 @@ export default function Sidebar() {
                     Report
                   </div>
                 </Link>
+                
+                {user?.role === "admin" && (
+                  <Link href="/admin" onClick={closeSidebar}>
+                    <div className={`flex items-center px-4 py-3 rounded-lg font-medium ${location === "/admin" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
+                      <ShieldCheck className={`h-5 w-5 mr-3 ${location === "/admin" ? "text-primary-500" : "text-neutral-500"}`} />
+                      Amministrazione
+                    </div>
+                  </Link>
+                )}
               </nav>
             </div>
           </div>
