@@ -3,7 +3,7 @@ import { User } from "@shared/schema";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Loader2, UserPlus, Shield, Key, RefreshCcw } from "lucide-react";
+import { Loader2, UserPlus, Shield, Key, RefreshCcw, MailIcon } from "lucide-react";
 
 import {
   Dialog,
@@ -71,8 +71,10 @@ export default function UserManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [temporaryPassword, setTemporaryPassword] = useState<string | null>(null);
+  const [invitationData, setInvitationData] = useState<{temporaryPassword?: string, invitationToken?: string} | null>(null);
 
   // Form for adding a new user
   const newUserForm = useForm<NewUserFormValues>({
@@ -174,6 +176,31 @@ export default function UserManagement() {
       });
     }
   });
+  
+  // Mutation to send invitation email
+  const sendInvitationMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      const res = await apiRequest("POST", `/api/admin/users/${userId}/invite`);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Invito inviato",
+        description: "L'email di invito è stata inviata con successo",
+      });
+      setInvitationData({
+        temporaryPassword: data.temporaryPassword,
+        invitationToken: data.invitationToken
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Errore",
+        description: `Errore durante l'invio dell'invito: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  });
 
   // Funzione per generare una password casuale sicura
   const generateSecurePassword = (length = 10) => {
@@ -226,6 +253,17 @@ export default function UserManagement() {
   const resetPassword = () => {
     if (!selectedUser) return;
     resetPasswordMutation.mutate(selectedUser.id);
+  };
+  
+  const openInviteDialog = (user: User) => {
+    setSelectedUser(user);
+    setInvitationData(null);
+    setIsInviteDialogOpen(true);
+  };
+  
+  const sendInvitation = () => {
+    if (!selectedUser) return;
+    sendInvitationMutation.mutate(selectedUser.id);
   };
 
   if (isLoading) {
@@ -293,11 +331,23 @@ export default function UserManagement() {
                     <Button 
                       variant="outline" 
                       size="sm"
+                      className="mr-2"
                       onClick={() => openResetPasswordDialog(user)}
                     >
                       <Key className="h-4 w-4 mr-1" />
                       Reset Password
                     </Button>
+                    {user.email && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => openInviteDialog(user)}
+                        className={user.invitationSent ? "bg-green-50 hover:bg-green-100 border-green-200" : ""}
+                      >
+                        <MailIcon className="h-4 w-4 mr-1" />
+                        {user.invitationSent ? "Reinvia Invito" : "Invia Invito"}
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
@@ -523,6 +573,63 @@ export default function UserManagement() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 Reset Password
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Send invitation dialog */}
+      <AlertDialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Invita utente: {selectedUser?.fullName}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {!invitationData ? (
+                <>
+                  <p>Stai per inviare un'email di invito a <strong>{selectedUser?.email}</strong>.</p>
+                  <p className="mt-2">
+                    L'utente riceverà un link per impostare la propria password e accedere al sistema.
+                  </p>
+                </>
+              ) : (
+                <div className="mt-2">
+                  <p className="font-medium text-green-600">Email di invito inviata con successo!</p>
+                  <div className="mt-4">
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-medium">Token di invito:</p>
+                        <div className="mt-1 p-3 bg-gray-100 dark:bg-gray-800 rounded-md font-mono text-xs overflow-x-auto">
+                          {invitationData.invitationToken}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <p className="text-sm font-medium">Password temporanea (solo per debug):</p>
+                        <div className="mt-1 p-3 bg-gray-100 dark:bg-gray-800 rounded-md font-mono text-center">
+                          {invitationData.temporaryPassword}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <p className="mt-4 text-sm">
+                      L'utente riceverà un'email con il link di invito e le istruzioni per l'accesso.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Chiudi</AlertDialogCancel>
+            {!invitationData && (
+              <AlertDialogAction onClick={sendInvitation} disabled={sendInvitationMutation.isPending}>
+                {sendInvitationMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Invia Invito
               </AlertDialogAction>
             )}
           </AlertDialogFooter>
