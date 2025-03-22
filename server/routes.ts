@@ -31,6 +31,46 @@ const isAdmin = (req: Request, res: Response, next: NextFunction) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
   setupAuth(app);
+  
+  // API per cambiare la propria password (utente autenticato)
+  app.post("/api/change-password", isAuthenticated, async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ error: "Password attuale e nuova password sono obbligatorie" });
+      }
+      
+      // Verifichiamo la password attuale
+      const user = await storage.getUser(req.user!.id);
+      if (!user) {
+        return res.status(404).json({ error: "Utente non trovato" });
+      }
+      
+      // Importiamo la funzione per confrontare le password
+      const { comparePasswords } = require("./auth");
+      
+      // Verifichiamo che la password attuale sia corretta
+      const isPasswordCorrect = await comparePasswords(currentPassword, user.password);
+      if (!isPasswordCorrect) {
+        return res.status(400).json({ error: "Password attuale non corretta" });
+      }
+      
+      // Effettuiamo l'aggiornamento della password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Aggiorniamo la password e impostiamo needsPasswordChange a false
+      await storage.updateUser(req.user!.id, {
+        password: hashedPassword,
+        needsPasswordChange: false
+      });
+      
+      res.json({ message: "Password cambiata con successo" });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      res.status(500).json({ error: "Errore durante il cambio password" });
+    }
+  });
 
   // API routes for activity types
   app.get("/api/activity-types", async (req, res) => {
@@ -491,9 +531,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const temporaryPassword = Math.random().toString(36).slice(-8);
       const hashedPassword = await hashPassword(temporaryPassword);
       
-      // Effettuiamo l'aggiornamento della password
-      // Qui ipotizziamo l'esistenza di un metodo updateUserPassword, che dovremo implementare
-      await storage.updateUserPassword(userId, hashedPassword);
+      // Effettuiamo l'aggiornamento della password e impostiamo needsPasswordChange a true
+      await storage.updateUser(userId, {
+        password: hashedPassword,
+        needsPasswordChange: true
+      });
       
       res.json({ 
         message: "Password resettata con successo",

@@ -40,6 +40,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Router />
+        <ChangePasswordDialog />
         <Toaster />
       </AuthProvider>
     </QueryClientProvider>
