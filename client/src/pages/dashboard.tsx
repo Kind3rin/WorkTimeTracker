@@ -31,28 +31,54 @@ export default function Dashboard() {
   const weekStart = startOfWeek(now, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
   
-  const { data: timeEntries = [], isLoading: isLoadingTimeEntries } = useQuery({
+  console.log("Dashboard - Start fetching data, user:", user?.id);
+  
+  // Set a realistic default for time entries to avoid loading states on empty data
+  const defaultTimeEntries = [];
+  const { data: timeEntries = defaultTimeEntries, isLoading: isLoadingTimeEntries, error: timeEntriesError } = useQuery({
     queryKey: ["/api/time-entries/range", { startDate: monthStart.toISOString(), endDate: now.toISOString() }],
     enabled: !!user,
+    retry: 1, // Reduce retries for faster failure
   });
   
   // Fetch expenses for this month
-  const { data: expenses = [], isLoading: isLoadingExpenses } = useQuery({
+  const defaultExpenses = [];
+  const { data: expenses = defaultExpenses, isLoading: isLoadingExpenses, error: expensesError } = useQuery({
     queryKey: ["/api/expenses/range", { startDate: monthStart.toISOString(), endDate: now.toISOString() }],
     enabled: !!user,
+    retry: 1,
   });
   
   // Fetch leave requests for vacation data
-  const { data: leaveRequests = [], isLoading: isLoadingLeave } = useQuery({
+  const defaultLeaveRequests = [];
+  const { data: leaveRequests = defaultLeaveRequests, isLoading: isLoadingLeave, error: leaveError } = useQuery({
     queryKey: ["/api/leave-requests"],
     enabled: !!user,
+    retry: 1,
   });
   
   // Fetch upcoming trips
-  const { data: trips = [], isLoading: isLoadingTrips } = useQuery({
+  const defaultTrips = [];
+  const { data: trips = defaultTrips, isLoading: isLoadingTrips, error: tripsError } = useQuery({
     queryKey: ["/api/trips"],
     enabled: !!user,
+    retry: 1,
   });
+  
+  // Debug info to help diagnose loading issues
+  useEffect(() => {
+    console.log("Dashboard loading state:", {
+      isLoadingTimeEntries,
+      isLoadingExpenses,
+      isLoadingLeave,
+      isLoadingTrips,
+      timeEntriesError,
+      expensesError,
+      leaveError,
+      tripsError
+    });
+  }, [isLoadingTimeEntries, isLoadingExpenses, isLoadingLeave, isLoadingTrips, 
+      timeEntriesError, expensesError, leaveError, tripsError]);
   
   // Process weekly time data for chart
   const weekDays = Array.from({ length: 7 }, (_, i) => {

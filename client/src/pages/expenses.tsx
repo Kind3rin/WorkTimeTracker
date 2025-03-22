@@ -419,6 +419,7 @@ export default function Expenses() {
                         <TableHead>Importo</TableHead>
                         <TableHead>Stato</TableHead>
                         <TableHead className="w-[100px]">Ricevuta</TableHead>
+                        <TableHead className="w-[80px]">Azioni</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -441,6 +442,53 @@ export default function Expenses() {
                               ) : (
                                 <span className="text-neutral-400">-</span>
                               )}
+                            </TableCell>
+                            <TableCell>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Dettagli Nota Spesa</DialogTitle>
+                                  </DialogHeader>
+                                  <div className="space-y-4 py-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div>
+                                        <div className="font-medium text-sm">Data</div>
+                                        <div>{format(new Date(expense.date), "dd/MM/yyyy")}</div>
+                                      </div>
+                                      <div>
+                                        <div className="font-medium text-sm">Importo</div>
+                                        <div>€{Number(expense.amount).toFixed(2)}</div>
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <div className="font-medium text-sm">Categoria</div>
+                                      <div>{getCategoryLabel(expense.category)}</div>
+                                    </div>
+                                    <div>
+                                      <div className="font-medium text-sm">Descrizione</div>
+                                      <div>{expense.description}</div>
+                                    </div>
+                                    {expense.tripId && (
+                                      <div>
+                                        <div className="font-medium text-sm">Trasferta Collegata</div>
+                                        <div>{getTripDestination(expense.tripId)}</div>
+                                      </div>
+                                    )}
+                                    <div>
+                                      <div className="font-medium text-sm">Stato</div>
+                                      <div>{getStatusBadge(expense.status)}</div>
+                                    </div>
+                                  </div>
+                                  <DialogFooter>
+                                    <Button variant="outline" onClick={() => {}}>Chiudi</Button>
+                                  </DialogFooter>
+                                </DialogContent>
+                              </Dialog>
                             </TableCell>
                           </TableRow>
                         ))

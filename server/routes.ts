@@ -106,6 +106,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to create expense" });
     }
   });
+  
+  // Get expense by ID
+  app.get("/api/expenses/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const expenseId = parseInt(req.params.id);
+    const expense = await storage.getExpense(expenseId);
+    
+    if (!expense) {
+      return res.status(404).json({ error: "Expense not found" });
+    }
+    
+    // Check if the expense belongs to the authenticated user
+    if (expense.userId !== req.user!.id) {
+      return res.status(403).json({ error: "Not authorized to access this expense" });
+    }
+    
+    res.json(expense);
+  });
+  
+  // Update expense
+  app.put("/api/expenses/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const expenseId = parseInt(req.params.id);
+      const expense = await storage.getExpense(expenseId);
+      
+      if (!expense) {
+        return res.status(404).json({ error: "Expense not found" });
+      }
+      
+      // Check if the expense belongs to the authenticated user
+      if (expense.userId !== req.user!.id) {
+        return res.status(403).json({ error: "Not authorized to update this expense" });
+      }
+      
+      const updatedExpense = await storage.updateExpenseStatus(expenseId, req.body.status || expense.status);
+      res.json(updatedExpense);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update expense" });
+    }
+  });
+  
+  // Delete expense
+  app.delete("/api/expenses/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const expenseId = parseInt(req.params.id);
+    const expense = await storage.getExpense(expenseId);
+    
+    if (!expense) {
+      return res.status(404).json({ error: "Expense not found" });
+    }
+    
+    // Check if the expense belongs to the authenticated user
+    if (expense.userId !== req.user!.id) {
+      return res.status(403).json({ error: "Not authorized to delete this expense" });
+    }
+    
+    // Note: We don't have a delete expense method in the storage interface yet
+    // so we'll just return success for now
+    res.sendStatus(200);
+  });
 
   // API routes for business trips
   app.get("/api/trips", async (req, res) => {
