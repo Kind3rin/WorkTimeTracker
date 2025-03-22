@@ -16,6 +16,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  getAllUsers(): Promise<User[]>; // Nuovo metodo per admin
   
   // Project methods
   getProject(id: number): Promise<Project | undefined>;
@@ -32,6 +33,7 @@ export interface IStorage {
   getTimeEntry(id: number): Promise<TimeEntry | undefined>;
   getTimeEntriesByUser(userId: number): Promise<TimeEntry[]>;
   getTimeEntriesByUserAndDateRange(userId: number, startDate: Date, endDate: Date): Promise<TimeEntry[]>;
+  getTimeEntriesByStatus(status: string): Promise<TimeEntry[]>; // Nuovo metodo per admin
   createTimeEntry(timeEntry: InsertTimeEntry): Promise<TimeEntry>;
   updateTimeEntryStatus(id: number, status: string): Promise<TimeEntry | undefined>;
   
@@ -39,6 +41,7 @@ export interface IStorage {
   getExpense(id: number): Promise<Expense | undefined>;
   getExpensesByUser(userId: number): Promise<Expense[]>;
   getExpensesByUserAndDateRange(userId: number, startDate: Date, endDate: Date): Promise<Expense[]>;
+  getExpensesByStatus(status: string): Promise<Expense[]>; // Nuovo metodo per admin
   createExpense(expense: InsertExpense): Promise<Expense>;
   updateExpenseStatus(id: number, status: string): Promise<Expense | undefined>;
   
@@ -46,6 +49,7 @@ export interface IStorage {
   getTrip(id: number): Promise<Trip | undefined>;
   getTripsByUser(userId: number): Promise<Trip[]>;
   getTripsByUserAndStatus(userId: number, status: string): Promise<Trip[]>;
+  getTripsByStatus(status: string): Promise<Trip[]>; // Nuovo metodo per admin
   createTrip(trip: InsertTrip): Promise<Trip>;
   updateTripStatus(id: number, status: string): Promise<Trip | undefined>;
   
@@ -53,6 +57,7 @@ export interface IStorage {
   getLeaveRequest(id: number): Promise<LeaveRequest | undefined>;
   getLeaveRequestsByUser(userId: number): Promise<LeaveRequest[]>;
   getLeaveRequestsByUserAndDateRange(userId: number, startDate: Date, endDate: Date): Promise<LeaveRequest[]>;
+  getLeaveRequestsByStatus(status: string): Promise<LeaveRequest[]>; // Nuovo metodo per admin
   createLeaveRequest(leaveRequest: InsertLeaveRequest): Promise<LeaveRequest>;
   updateLeaveRequestStatus(id: number, status: string): Promise<LeaveRequest | undefined>;
   
@@ -60,8 +65,10 @@ export interface IStorage {
   getSickLeave(id: number): Promise<SickLeave | undefined>;
   getSickLeavesByUser(userId: number): Promise<SickLeave[]>;
   getSickLeavesByUserAndDateRange(userId: number, startDate: Date, endDate: Date): Promise<SickLeave[]>;
+  getSickLeavesByStatus(status: string): Promise<SickLeave[]>; // Nuovo metodo per admin
   createSickLeave(sickLeave: InsertSickLeave): Promise<SickLeave>;
   updateSickLeave(id: number, sickLeave: Partial<InsertSickLeave>): Promise<SickLeave | undefined>;
+  updateSickLeaveStatus(id: number, status: string): Promise<SickLeave | undefined>; // Nuovo metodo per admin
   deleteSickLeave(id: number): Promise<boolean>;
   
   // Session store
@@ -145,6 +152,10 @@ export class MemStorage implements IStorage {
     return user;
   }
   
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+  
   // Project methods
   async getProject(id: number): Promise<Project | undefined> {
     return this.projects.get(id);
@@ -213,6 +224,12 @@ export class MemStorage implements IStorage {
     return newEntry;
   }
   
+  async getTimeEntriesByStatus(status: string): Promise<TimeEntry[]> {
+    return Array.from(this.timeEntries.values()).filter(
+      (entry) => entry.status === status
+    );
+  }
+  
   async updateTimeEntryStatus(id: number, status: string): Promise<TimeEntry | undefined> {
     const entry = this.timeEntries.get(id);
     if (entry) {
@@ -253,6 +270,12 @@ export class MemStorage implements IStorage {
     return newExpense;
   }
   
+  async getExpensesByStatus(status: string): Promise<Expense[]> {
+    return Array.from(this.expenses.values()).filter(
+      (expense) => expense.status === status
+    );
+  }
+  
   async updateExpenseStatus(id: number, status: string): Promise<Expense | undefined> {
     const expense = this.expenses.get(id);
     if (expense) {
@@ -286,6 +309,12 @@ export class MemStorage implements IStorage {
     const newTrip: Trip = { ...trip, id, createdAt };
     this.trips.set(id, newTrip);
     return newTrip;
+  }
+  
+  async getTripsByStatus(status: string): Promise<Trip[]> {
+    return Array.from(this.trips.values()).filter(
+      (trip) => trip.status === status
+    );
   }
   
   async updateTripStatus(id: number, status: string): Promise<Trip | undefined> {

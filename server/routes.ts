@@ -1,9 +1,25 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertTimeEntrySchema, insertExpenseSchema, insertTripSchema, insertLeaveRequestSchema, insertSickLeaveSchema } from "@shared/schema";
 import { z } from "zod";
+
+// Middleware per verificare se l'utente è autenticato
+const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  return res.status(401).json({ error: "Autenticazione richiesta" });
+};
+
+// Middleware per verificare se l'utente è un amministratore
+const isAdmin = (req: Request, res: Response, next: NextFunction) => {
+  if (req.isAuthenticated() && req.user?.role === "admin") {
+    return next();
+  }
+  return res.status(403).json({ error: "Accesso riservato agli amministratori" });
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
@@ -381,6 +397,194 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.sendStatus(200);
     } else {
       res.status(500).json({ error: "Failed to delete sick leave request" });
+    }
+  });
+
+  // ================ ADMIN ROUTES ================
+  
+  // API per ottenere tutti gli utenti (solo admin)
+  app.get("/api/admin/users", isAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error getting users:", error);
+      res.status(500).json({ error: "Errore durante il recupero degli utenti" });
+    }
+  });
+
+  // API per ottenere tutte le richieste di permesso in pending (solo admin)
+  app.get("/api/admin/leave-requests/pending", isAdmin, async (req, res) => {
+    try {
+      const pendingLeaveRequests = await storage.getLeaveRequestsByStatus("pending");
+      res.json(pendingLeaveRequests);
+    } catch (error) {
+      console.error("Error getting pending leave requests:", error);
+      res.status(500).json({ error: "Errore durante il recupero delle richieste di permesso" });
+    }
+  });
+
+  // API per ottenere tutti i permessi malattia in pending (solo admin)
+  app.get("/api/admin/sickleaves/pending", isAdmin, async (req, res) => {
+    try {
+      const pendingSickLeaves = await storage.getSickLeavesByStatus("pending");
+      res.json(pendingSickLeaves);
+    } catch (error) {
+      console.error("Error getting pending sick leaves:", error);
+      res.status(500).json({ error: "Errore durante il recupero dei permessi di malattia" });
+    }
+  });
+
+  // API per ottenere tutte le richieste di trasferta in pending (solo admin)
+  app.get("/api/admin/trips/pending", isAdmin, async (req, res) => {
+    try {
+      const pendingTrips = await storage.getTripsByStatus("pending");
+      res.json(pendingTrips);
+    } catch (error) {
+      console.error("Error getting pending trips:", error);
+      res.status(500).json({ error: "Errore durante il recupero delle richieste di trasferta" });
+    }
+  });
+  
+  // API per ottenere tutti i timesheet in pending (solo admin)
+  app.get("/api/admin/time-entries/pending", isAdmin, async (req, res) => {
+    try {
+      const pendingTimeEntries = await storage.getTimeEntriesByStatus("pending");
+      res.json(pendingTimeEntries);
+    } catch (error) {
+      console.error("Error getting pending time entries:", error);
+      res.status(500).json({ error: "Errore durante il recupero delle registrazioni orarie" });
+    }
+  });
+  
+  // API per ottenere tutte le spese in pending (solo admin)
+  app.get("/api/admin/expenses/pending", isAdmin, async (req, res) => {
+    try {
+      const pendingExpenses = await storage.getExpensesByStatus("pending");
+      res.json(pendingExpenses);
+    } catch (error) {
+      console.error("Error getting pending expenses:", error);
+      res.status(500).json({ error: "Errore durante il recupero delle spese" });
+    }
+  });
+  
+  // API per approvare/rifiutare permessi (solo admin)
+  app.patch("/api/admin/leave-requests/:id/:action", isAdmin, async (req, res) => {
+    try {
+      const { id, action } = req.params;
+      const leaveRequestId = parseInt(id);
+      
+      if (!["approve", "reject"].includes(action)) {
+        return res.status(400).json({ error: "Azione non valida. Usa 'approve' o 'reject'" });
+      }
+      
+      const status = action === "approve" ? "approved" : "rejected";
+      const updatedLeaveRequest = await storage.updateLeaveRequestStatus(leaveRequestId, status);
+      
+      if (!updatedLeaveRequest) {
+        return res.status(404).json({ error: "Richiesta di permesso non trovata" });
+      }
+      
+      res.json(updatedLeaveRequest);
+    } catch (error) {
+      console.error(`Error ${req.params.action}ing leave request:`, error);
+      res.status(500).json({ error: `Errore durante l'${req.params.action === "approve" ? "approvazione" : "rifiuto"} della richiesta di permesso` });
+    }
+  });
+
+  // API per approvare/rifiutare permessi malattia (solo admin)
+  app.patch("/api/admin/sickleaves/:id/:action", isAdmin, async (req, res) => {
+    try {
+      const { id, action } = req.params;
+      const sickLeaveId = parseInt(id);
+      
+      if (!["approve", "reject"].includes(action)) {
+        return res.status(400).json({ error: "Azione non valida. Usa 'approve' o 'reject'" });
+      }
+      
+      const status = action === "approve" ? "approved" : "rejected";
+      const updatedSickLeave = await storage.updateSickLeaveStatus(sickLeaveId, status);
+      
+      if (!updatedSickLeave) {
+        return res.status(404).json({ error: "Permesso di malattia non trovato" });
+      }
+      
+      res.json(updatedSickLeave);
+    } catch (error) {
+      console.error(`Error ${req.params.action}ing sick leave:`, error);
+      res.status(500).json({ error: `Errore durante l'${req.params.action === "approve" ? "approvazione" : "rifiuto"} del permesso di malattia` });
+    }
+  });
+
+  // API per approvare/rifiutare richieste di trasferta (solo admin)
+  app.patch("/api/admin/trips/:id/:action", isAdmin, async (req, res) => {
+    try {
+      const { id, action } = req.params;
+      const tripId = parseInt(id);
+      
+      if (!["approve", "reject"].includes(action)) {
+        return res.status(400).json({ error: "Azione non valida. Usa 'approve' o 'reject'" });
+      }
+      
+      const status = action === "approve" ? "approved" : "rejected";
+      const updatedTrip = await storage.updateTripStatus(tripId, status);
+      
+      if (!updatedTrip) {
+        return res.status(404).json({ error: "Richiesta di trasferta non trovata" });
+      }
+      
+      res.json(updatedTrip);
+    } catch (error) {
+      console.error(`Error ${req.params.action}ing trip:`, error);
+      res.status(500).json({ error: `Errore durante l'${req.params.action === "approve" ? "approvazione" : "rifiuto"} della richiesta di trasferta` });
+    }
+  });
+  
+  // API per approvare/rifiutare registrazioni orarie (solo admin)
+  app.patch("/api/admin/time-entries/:id/:action", isAdmin, async (req, res) => {
+    try {
+      const { id, action } = req.params;
+      const timeEntryId = parseInt(id);
+      
+      if (!["approve", "reject"].includes(action)) {
+        return res.status(400).json({ error: "Azione non valida. Usa 'approve' o 'reject'" });
+      }
+      
+      const status = action === "approve" ? "approved" : "rejected";
+      const updatedTimeEntry = await storage.updateTimeEntryStatus(timeEntryId, status);
+      
+      if (!updatedTimeEntry) {
+        return res.status(404).json({ error: "Registrazione oraria non trovata" });
+      }
+      
+      res.json(updatedTimeEntry);
+    } catch (error) {
+      console.error(`Error ${req.params.action}ing time entry:`, error);
+      res.status(500).json({ error: `Errore durante l'${req.params.action === "approve" ? "approvazione" : "rifiuto"} della registrazione oraria` });
+    }
+  });
+  
+  // API per approvare/rifiutare spese (solo admin)
+  app.patch("/api/admin/expenses/:id/:action", isAdmin, async (req, res) => {
+    try {
+      const { id, action } = req.params;
+      const expenseId = parseInt(id);
+      
+      if (!["approve", "reject"].includes(action)) {
+        return res.status(400).json({ error: "Azione non valida. Usa 'approve' o 'reject'" });
+      }
+      
+      const status = action === "approve" ? "approved" : "rejected";
+      const updatedExpense = await storage.updateExpenseStatus(expenseId, status);
+      
+      if (!updatedExpense) {
+        return res.status(404).json({ error: "Spesa non trovata" });
+      }
+      
+      res.json(updatedExpense);
+    } catch (error) {
+      console.error(`Error ${req.params.action}ing expense:`, error);
+      res.status(500).json({ error: `Errore durante l'${req.params.action === "approve" ? "approvazione" : "rifiuto"} della spesa` });
     }
   });
 
