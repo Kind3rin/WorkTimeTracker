@@ -190,7 +190,6 @@ export default function TimeOff() {
   // Leave types
   const leaveTypes = [
     { value: "vacation", label: "Ferie" },
-    { value: "sick_leave", label: "Malattia" },
     { value: "personal_leave", label: "Permesso Personale" },
   ];
 
@@ -404,7 +403,7 @@ export default function TimeOff() {
           </header>
           
           {/* Leave balances */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-md font-medium flex items-center">
@@ -422,22 +421,7 @@ export default function TimeOff() {
               </CardContent>
             </Card>
             
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-md font-medium flex items-center">
-                  <Clock className="h-5 w-5 mr-2 text-red-500" />
-                  Malattia
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-neutral-500">Utilizzati: {leaveStats.used.sick_leave} giorni</span>
-                  <span className="text-sm font-semibold">{leaveStats.remaining.sick_leave} rimasti</span>
-                </div>
-                <Progress value={leaveStats.percentages.sick_leave} className="h-2" />
-                <p className="text-xs text-neutral-500 mt-2">Su un totale di {leaveStats.annualAllowances.sick_leave} giorni annuali</p>
-              </CardContent>
-            </Card>
+
             
             <Card>
               <CardHeader className="pb-2">
