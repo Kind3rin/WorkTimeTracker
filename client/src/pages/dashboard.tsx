@@ -276,18 +276,18 @@ export default function Dashboard() {
       <Sidebar />
       
       <div className="lg:ml-64 flex-1 min-h-screen">
-        <div className="p-6">
-          <header className="mb-8">
-            <h1 className="text-2xl font-semibold text-neutral-800">Dashboard</h1>
-            <p className="text-neutral-500">Benvenuto nel tuo pannello di controllo delle attività lavorative</p>
+        <div className="p-3 sm:p-4 md:p-6">
+          <header className="mb-4 md:mb-6 lg:mb-8">
+            <h1 className="text-xl md:text-2xl font-semibold text-neutral-800">Dashboard</h1>
+            <p className="text-sm md:text-base text-neutral-500">Benvenuto nel tuo pannello di controllo delle attività lavorative</p>
           </header>
           
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
             <SummaryCard
               title="Ore Registrate (Mese)"
               value={`${totalMonthlyHours.toFixed(1)}`}
-              icon={<Clock className="h-6 w-6" />}
+              icon={<Clock className="h-5 w-5 md:h-6 md:w-6" />}
               changeValue={`+${previousMonthPercentChange}% rispetto al mese scorso`}
               changeType="positive"
             />
@@ -295,7 +295,7 @@ export default function Dashboard() {
             <SummaryCard
               title="Note Spese (Mese)"
               value={`€${totalMonthlyExpenses.toFixed(2)}`}
-              icon={<DollarSign className="h-6 w-6" />}
+              icon={<DollarSign className="h-5 w-5 md:h-6 md:w-6" />}
               changeValue={`${previousMonthExpensesChange}% rispetto al mese scorso`}
               changeType="negative"
             />
@@ -303,22 +303,22 @@ export default function Dashboard() {
             <SummaryCard
               title="Ferie Rimanenti"
               value={`${remainingVacationDays} giorni`}
-              icon={<Calendar className="h-6 w-6" />}
+              icon={<Calendar className="h-5 w-5 md:h-6 md:w-6" />}
               infoText="Scadenza: 31/12/2023"
             />
             
             <SummaryCard
               title="Prossima Trasferta"
               value={nextTrip ? `${nextTrip.destination}, ${format(new Date(nextTrip.startDate), "dd/MM")}-${format(new Date(nextTrip.endDate), "dd/MM")}` : "Nessuna programmata"}
-              icon={<MapPin className="h-6 w-6" />}
+              icon={<MapPin className="h-5 w-5 md:h-6 md:w-6" />}
               infoText={nextTrip ? (nextTrip.status === "approved" ? "Confermata" : "Conferma richiesta") : undefined}
             />
           </div>
           
           {/* Recent Activities and Quick Entry */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
             {/* Recent Activities */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 order-2 lg:order-1">
               <ActivityTable 
                 activities={recentActivities} 
                 caption="Attività Recenti"
@@ -328,13 +328,13 @@ export default function Dashboard() {
             </div>
             
             {/* Quick Entry Form */}
-            <div>
+            <div className="order-1 lg:order-2 mb-4 lg:mb-0">
               <QuickEntryForm />
             </div>
           </div>
           
           {/* Monthly Trend Chart */}
-          <div className="mb-8">
+          <div className="mb-6 md:mb-8 overflow-x-auto">
             <MonthlyTrendChart 
               data={monthlyTrendData}
               title="Andamento Mensile"
@@ -343,9 +343,9 @@ export default function Dashboard() {
           </div>
           
           {/* Weekly Chart and Activity Distribution Chart */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
             {/* Weekly Work Hours Chart */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 overflow-x-auto order-2 lg:order-1">
               <WeeklyChart 
                 data={weeklyTimeData}
                 totalHours={totalWeeklyHours}
@@ -354,7 +354,7 @@ export default function Dashboard() {
             </div>
             
             {/* Activity Distribution Chart */}
-            <div>
+            <div className="order-1 lg:order-2 mb-4 lg:mb-0">
               <ActivityDistributionChart 
                 data={activityDistributionData}
                 title="Distribuzione Attività"
@@ -363,13 +363,13 @@ export default function Dashboard() {
           </div>
           
           {/* Upcoming Events */}
-          <div className="mb-8">
+          <div className="mb-6 md:mb-8">
             <UpcomingEvents events={upcomingEvents} />
           </div>
         </div>
         
         {/* Footer */}
-        <footer className="mt-10 border-t py-6 px-6 text-center text-neutral-500 text-sm">
+        <footer className="mt-6 md:mt-10 border-t py-4 md:py-6 px-3 sm:px-4 md:px-6 text-center text-neutral-500 text-xs md:text-sm">
           <p>&copy; 2023 WorkTrack - Sistema di Gestione Attività Lavorative. Tutti i diritti riservati.</p>
         </footer>
       </div>
