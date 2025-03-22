@@ -143,10 +143,14 @@ export class MemStorage implements IStorage {
     // o un file di configurazione protetto
     this.createUser({
       username: "admin",
+      email: "admin@example.com",
       password: "f959786059e2efa550adcd973c32d246c2a2aa6b38537ca2a49dfe5ca9e5d0da4d2573425207c306958a6a4ff83324a31ef83a5c217561823be93625e12ec81a.1eb1c4eff9d05872096ff2fb5f151a8e", // password: "admin123"
       fullName: "Amministratore",
       role: "admin",
-      needsPasswordChange: true // Forza il cambio password al primo accesso
+      needsPasswordChange: true, // Forza il cambio password al primo accesso
+      invitationSent: false,
+      invitationToken: null,
+      invitationExpires: null
     });
   }
 

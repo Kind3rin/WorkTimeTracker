@@ -119,4 +119,72 @@ export function setupAuth(app: Express) {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json(req.user);
   });
+  
+  // Validazione token di invito e impostazione nuova password
+  app.post("/api/invitation/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      const { newPassword } = req.body;
+      
+      if (!token || !newPassword) {
+        return res.status(400).json({ message: "Token di invito e nuova password sono richiesti" });
+      }
+      
+      // Verifica il token di invito
+      const user = await storage.validateInvitationToken(token);
+      if (!user) {
+        return res.status(400).json({ message: "Token di invito non valido o scaduto" });
+      }
+      
+      // Imposta la nuova password e rimuovi il token di invito
+      const hashedPassword = await hashPassword(newPassword);
+      await storage.updateUser(user.id, {
+        password: hashedPassword,
+        needsPasswordChange: false,
+        invitationToken: null,
+        invitationExpires: null
+      });
+      
+      // Effettua il login automatico dell'utente
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: "Errore durante il login automatico" });
+        }
+        return res.status(200).json({ message: "Password impostata con successo" });
+      });
+    } catch (error) {
+      console.error("Errore nella validazione del token di invito:", error);
+      return res.status(500).json({ message: "Errore nel server" });
+    }
+  });
+  
+  // Verifica validità token di invito
+  app.get("/api/invitation/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      
+      if (!token) {
+        return res.status(400).json({ message: "Token di invito richiesto" });
+      }
+      
+      // Verifica il token di invito
+      const user = await storage.validateInvitationToken(token);
+      if (!user) {
+        return res.status(400).json({ message: "Token di invito non valido o scaduto" });
+      }
+      
+      return res.status(200).json({ 
+        valid: true, 
+        user: { 
+          id: user.id, 
+          username: user.username, 
+          email: user.email, 
+          fullName: user.fullName 
+        } 
+      });
+    } catch (error) {
+      console.error("Errore nella verifica del token di invito:", error);
+      return res.status(500).json({ message: "Errore nel server" });
+    }
+  });
 }

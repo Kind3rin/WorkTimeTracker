@@ -10,6 +10,7 @@ import {
   insertSickLeaveSchema, 
   insertUserSchema 
 } from "@shared/schema";
+import { generateInvitationToken, generateTemporaryPassword, sendInvitationEmail } from "./email";
 import { z } from "zod";
 
 // Middleware per verificare se l'utente è autenticato
