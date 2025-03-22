@@ -64,18 +64,21 @@ export default function AdminPage() {
   // Verifica se l'utente è un amministratore
   if (user?.role !== "admin") {
     return (
-      <div className="container mx-auto py-10">
-        <Card>
-          <CardHeader>
-            <CardTitle>Accesso negato</CardTitle>
-            <CardDescription>
-              Questa pagina è accessibile solo agli utenti con ruolo Amministratore.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>Non hai i permessi necessari per visualizzare questa pagina.</p>
-          </CardContent>
-        </Card>
+      <div className="flex min-h-screen">
+        <Sidebar />
+        <div className="flex-1 p-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Accesso negato</CardTitle>
+              <CardDescription>
+                Questa pagina è accessibile solo agli utenti con ruolo Amministratore.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p>Non hai i permessi necessari per visualizzare questa pagina.</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -698,47 +701,52 @@ export default function AdminPage() {
   // Render dell'errore
   if (error) {
     return (
-      <div className="container mx-auto py-10">
-        <Card>
-          <CardHeader>
-            <CardTitle>Errore</CardTitle>
-            <CardDescription>
-              Si è verificato un errore durante il caricamento dei dati
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>{(error as Error).message}</p>
-          </CardContent>
-        </Card>
+      <div className="flex min-h-screen">
+        <Sidebar />
+        <div className="flex-1 p-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Errore</CardTitle>
+              <CardDescription>
+                Si è verificato un errore durante il caricamento dei dati
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p>{(error as Error).message}</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <Card className="mb-8">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Pannello Amministratore</CardTitle>
-            <CardDescription>
-              Gestisci e approva le richieste degli utenti
-            </CardDescription>
-          </div>
-          <UserCheck className="h-8 w-8 text-muted-foreground" />
-        </CardHeader>
-      </Card>
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <div className="flex-1 p-8">
+        <Card className="mb-8">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Pannello Amministratore</CardTitle>
+              <CardDescription>
+                Gestisci e approva le richieste degli utenti
+              </CardDescription>
+            </div>
+            <UserCheck className="h-8 w-8 text-muted-foreground" />
+          </CardHeader>
+        </Card>
 
-      <Tabs defaultValue="timeEntries" value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="timeEntries">Timesheet</TabsTrigger>
-          <TabsTrigger value="expenses">Spese</TabsTrigger>
-          <TabsTrigger value="trips">Viaggi</TabsTrigger>
-          <TabsTrigger value="leaveRequests">Permessi</TabsTrigger>
-          <TabsTrigger value="sickLeaves">Malattie</TabsTrigger>
-          <TabsTrigger value="users">Utenti</TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="timeEntries" value={selectedTab} onValueChange={setSelectedTab}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="timeEntries">Timesheet</TabsTrigger>
+            <TabsTrigger value="expenses">Spese</TabsTrigger>
+            <TabsTrigger value="trips">Viaggi</TabsTrigger>
+            <TabsTrigger value="leaveRequests">Permessi</TabsTrigger>
+            <TabsTrigger value="sickLeaves">Malattie</TabsTrigger>
+            <TabsTrigger value="users">Utenti</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="timeEntries">
+          <TabsContent value="timeEntries">
           <Card>
             <CardHeader>
               <CardTitle>Richieste Timesheet</CardTitle>
@@ -1010,6 +1018,7 @@ export default function AdminPage() {
       </AlertDialog>
 
       {renderItemDetails()}
+      </div>
     </div>
   );
 }
