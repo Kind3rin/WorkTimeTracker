@@ -39,15 +39,19 @@ export default function MonthlyTrendChart({
   const totalExpenses = data.reduce((sum, item) => sum + (item.expenses || 0), 0);
 
   // Formatta i dati per il grafico
-  const formattedData = data.map(item => ({
-    ...item,
-    // Estrai solo il giorno dalla data per l'etichetta dell'asse X
-    day: new Date(item.date).getDate()
-  }));
+  const formattedData = data.map(item => {
+    const day = new Date(item.date).getDate();
+    return {
+      ...item,
+      // Estrai solo il giorno dalla data per l'etichetta dell'asse X
+      day
+    };
+  });
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
-      const dateObj = new Date(data.find(d => d.day === label)?.date || "");
+      const originalData = data.find(d => new Date(d.date).getDate() === parseInt(label));
+      const dateObj = originalData ? new Date(originalData.date) : new Date();
       const formattedDate = dateObj.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
       
       return (
