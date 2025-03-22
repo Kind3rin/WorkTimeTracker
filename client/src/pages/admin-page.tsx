@@ -45,12 +45,13 @@ export default function AdminPage() {
   const { data: pendingItems, isLoading, error } = useQuery({
     queryKey: ['/api/admin', selectedTab],
     queryFn: () => apiRequest("GET", `/api/admin/${selectedTab}`).then(res => res.json()),
+    enabled: user?.role === "admin",
   });
 
   // Mutazione per approvare una richiesta
   const approveMutation = useMutation({
     mutationFn: async ({ id, type }: { id: number, type: string }) => {
-      const res = await apiRequest("POST", `/api/admin/${type}/approve/${id}`);
+      const res = await apiRequest("PATCH", `/api/admin/${type}/${id}/approve`);
       return await res.json();
     },
     onSuccess: () => {
@@ -73,7 +74,7 @@ export default function AdminPage() {
   // Mutazione per rifiutare una richiesta
   const rejectMutation = useMutation({
     mutationFn: async ({ id, type }: { id: number, type: string }) => {
-      const res = await apiRequest("POST", `/api/admin/${type}/reject/${id}`);
+      const res = await apiRequest("PATCH", `/api/admin/${type}/${id}/reject`);
       return await res.json();
     },
     onSuccess: () => {
