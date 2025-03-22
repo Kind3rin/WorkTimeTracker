@@ -125,6 +125,27 @@ export default function SettingsPage() {
     },
   });
 
+  // Funzione per gestire il caricamento dell'immagine
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setProfileImage(e.target?.result as string);
+        toast({
+          title: "Immagine caricata",
+          description: "L'immagine del profilo è stata caricata. Salva per applicare le modifiche.",
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Funzione per aprire il selettore di file
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
   // Funzione di salvataggio del profilo
   function onProfileSubmit(data: z.infer<typeof profileFormSchema>) {
     setIsSubmitting(true);
@@ -219,6 +240,35 @@ export default function SettingsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {/* Sezione immagine profilo */}
+                  <div className="mb-6 flex flex-col items-center space-y-4">
+                    <Avatar className="h-24 w-24 cursor-pointer" onClick={triggerFileInput}>
+                      <AvatarImage src={profileImage || ""} alt="Immagine profilo" />
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {user?.fullName ? user.fullName.charAt(0).toUpperCase() : <UserCircle className="h-12 w-12" />}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                    />
+                    
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex items-center gap-2"
+                      onClick={triggerFileInput}
+                    >
+                      <Camera className="h-4 w-4" />
+                      <span>Cambia immagine</span>
+                    </Button>
+                  </div>
+                  
                   <Form {...profileForm}>
                     <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
                       <FormField
