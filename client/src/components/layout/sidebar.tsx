@@ -11,7 +11,8 @@ import {
   X, 
   Settings, 
   DollarSign,
-  LayoutDashboard
+  LayoutDashboard,
+  Activity
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -144,6 +145,13 @@ export default function Sidebar() {
                   <div className={`flex items-center px-4 py-3 rounded-lg font-medium ${location === "/timeoff" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
                     <Calendar className={`h-5 w-5 mr-3 ${location === "/timeoff" ? "text-primary-500" : "text-neutral-500"}`} />
                     Ferie e Permessi
+                  </div>
+                </Link>
+                
+                <Link href="/sickleave" onClick={closeSidebar}>
+                  <div className={`flex items-center px-4 py-3 rounded-lg font-medium ${location === "/sickleave" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
+                    <Activity className={`h-5 w-5 mr-3 ${location === "/sickleave" ? "text-primary-500" : "text-neutral-500"}`} />
+                    Malattia
                   </div>
                 </Link>
                 

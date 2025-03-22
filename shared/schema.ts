@@ -108,13 +108,13 @@ export const insertTripSchema = createInsertSchema(trips).pick({
   status: true,
 });
 
-// Leave requests (sick leave, vacation, etc.)
+// Leave requests (vacation, personal leave, etc.)
 export const leaveRequests = pgTable("leave_requests", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
-  type: text("type").notNull(), // sick_leave, vacation, personal_leave
+  type: text("type").notNull(), // vacation, personal_leave
   reason: text("reason"),
   status: text("status").notNull().default("pending"), // pending, approved, rejected
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -126,6 +126,27 @@ export const insertLeaveRequestSchema = createInsertSchema(leaveRequests).pick({
   endDate: true,
   type: true,
   reason: true,
+  status: true,
+});
+
+// Sick leave requests (with protocol number for Italian compliance)
+export const sickLeaves = pgTable("sick_leaves", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  protocolNumber: text("protocol_number").notNull(),
+  note: text("note"),
+  status: text("status").notNull().default("pending"), // pending, approved, rejected
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertSickLeaveSchema = createInsertSchema(sickLeaves).pick({
+  userId: true,
+  startDate: true,
+  endDate: true,
+  protocolNumber: true,
+  note: true,
   status: true,
 });
 
@@ -150,3 +171,6 @@ export type InsertTrip = z.infer<typeof insertTripSchema>;
 
 export type LeaveRequest = typeof leaveRequests.$inferSelect;
 export type InsertLeaveRequest = z.infer<typeof insertLeaveRequestSchema>;
+
+export type SickLeave = typeof sickLeaves.$inferSelect;
+export type InsertSickLeave = z.infer<typeof insertSickLeaveSchema>;

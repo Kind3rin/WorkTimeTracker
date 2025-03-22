@@ -11,7 +11,9 @@ import Timesheet from "@/pages/timesheet";
 import Expenses from "@/pages/expenses";
 import Trips from "@/pages/trips";
 import TimeOff from "@/pages/timeoff";
+import SickleavePage from "@/pages/sickleave-page";
 import Reports from "@/pages/reports";
+import SettingsPage from "@/pages/settings-page";
 
 function Router() {
   return (
@@ -21,7 +23,9 @@ function Router() {
       <ProtectedRoute path="/expenses" component={Expenses} />
       <ProtectedRoute path="/trips" component={Trips} />
       <ProtectedRoute path="/timeoff" component={TimeOff} />
+      <ProtectedRoute path="/sickleave" component={SickleavePage} />
       <ProtectedRoute path="/reports" component={Reports} />
+      <ProtectedRoute path="/settings" component={SettingsPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
