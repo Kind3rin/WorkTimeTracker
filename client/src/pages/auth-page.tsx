@@ -46,20 +46,6 @@ export default function AuthPage() {
   const { user, isLoading, loginMutation, registerMutation } = useAuth();
   const [activeTab, setActiveTab] = useState<string>("login");
   
-  // Redirect se l'utente è già autenticato
-  if (user) {
-    return <Redirect to="/" />;
-  }
-  
-  // Mostra un loader durante il caricamento dell'utente
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   // Login form
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -80,6 +66,20 @@ export default function AuthPage() {
       role: "employee",
     },
   });
+  
+  // Redirect se l'utente è già autenticato
+  if (user) {
+    return <Redirect to="/" />;
+  }
+  
+  // Mostra un loader durante il caricamento dell'utente
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   function onLoginSubmit(data: LoginFormValues) {
     loginMutation.mutate(data);
