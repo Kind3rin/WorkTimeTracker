@@ -1,8 +1,15 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth } from "./auth";
-import { insertTimeEntrySchema, insertExpenseSchema, insertTripSchema, insertLeaveRequestSchema, insertSickLeaveSchema } from "@shared/schema";
+import { setupAuth, hashPassword } from "./auth";
+import { 
+  insertTimeEntrySchema, 
+  insertExpenseSchema, 
+  insertTripSchema, 
+  insertLeaveRequestSchema, 
+  insertSickLeaveSchema, 
+  insertUserSchema 
+} from "@shared/schema";
 import { z } from "zod";
 
 // Middleware per verificare se l'utente è autenticato

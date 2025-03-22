@@ -72,7 +72,7 @@ export interface IStorage {
   deleteSickLeave(id: number): Promise<boolean>;
   
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: ReturnType<typeof createMemoryStore>;
 }
 
 export class MemStorage implements IStorage {
@@ -85,7 +85,7 @@ export class MemStorage implements IStorage {
   private leaveRequests: Map<number, LeaveRequest>;
   private sickLeaves: Map<number, SickLeave>;
   
-  sessionStore: session.SessionStore;
+  sessionStore: ReturnType<typeof createMemoryStore>;
   
   private userCurrentId: number;
   private projectCurrentId: number;
