@@ -141,8 +141,8 @@ export default function Trips() {
     tripMutation.mutate({
       userId: user.id,
       destination: data.destination,
-      startDate: new Date(data.startDate),
-      endDate: new Date(data.endDate),
+      startDate: data.startDate, // send as string, not as Date object
+      endDate: data.endDate, // send as string, not as Date object
       purpose: data.purpose,
       status: "pending",
     });

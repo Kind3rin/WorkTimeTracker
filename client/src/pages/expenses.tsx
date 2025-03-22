@@ -154,8 +154,8 @@ export default function Expenses() {
     
     expenseMutation.mutate({
       userId: user.id,
-      date: new Date(data.date),
-      amount: parseFloat(data.amount),
+      date: data.date, // send as string, not as Date object
+      amount: data.amount, // send as string, not as parsed float
       category: data.category,
       description: data.description,
       tripId: data.tripId ? parseInt(data.tripId) : null,
