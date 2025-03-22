@@ -6,15 +6,19 @@ import {
   DollarSign, 
   Calendar, 
   MapPin, 
-  Loader2 
+  Loader2,
+  BarChart3,
+  LucideBarChart
 } from "lucide-react";
 import Sidebar from "@/components/layout/sidebar";
 import SummaryCard from "@/components/dashboard/summary-card";
 import ActivityTable, { Activity } from "@/components/dashboard/activity-table";
 import QuickEntryForm from "@/components/dashboard/quick-entry-form";
 import WeeklyChart from "@/components/dashboard/weekly-chart";
+import ActivityDistributionChart from "@/components/dashboard/activity-distribution-chart";
+import MonthlyTrendChart from "@/components/dashboard/monthly-trend-chart";
 import UpcomingEvents from "@/components/dashboard/upcoming-events";
-import { addDays, format, parseISO, startOfWeek, endOfWeek, startOfMonth, differenceInDays, subDays } from "date-fns";
+import { addDays, format, parseISO, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, differenceInDays, subDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
@@ -201,6 +205,72 @@ export default function Dashboard() {
   // Calculate monthly expense total
   const totalMonthlyExpenses = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
   
+  // Prepara i dati per il grafico a torta della distribuzione delle attività
+  // Raggruppa le time entries per tipo di attività e calcola le ore totali
+  const activityTypeHours = timeEntries.reduce((acc, entry) => {
+    // Utilizziamo l'ID del tipo di attività come chiave
+    const activityTypeId = entry.activityTypeId.toString();
+    if (!acc[activityTypeId]) {
+      acc[activityTypeId] = {
+        hours: 0,
+        activityTypeId: entry.activityTypeId
+      };
+    }
+    acc[activityTypeId].hours += Number(entry.hours);
+    return acc;
+  }, {} as Record<string, { hours: number, activityTypeId: number }>);
+  
+  // Colori per i tipi di attività
+  const activityColors = [
+    "#0ea5e9", // Blue
+    "#10b981", // Green
+    "#f59e0b", // Amber
+    "#ef4444", // Red
+    "#8b5cf6", // Purple
+    "#ec4899", // Pink
+    "#14b8a6", // Teal
+    "#f97316", // Orange
+  ];
+
+  // Dati per il grafico a torta della distribuzione delle attività
+  const activityDistributionData = Object.values(activityTypeHours).map((item, index) => ({
+    name: `Attività ${item.activityTypeId}`,
+    value: item.hours,
+    color: activityColors[index % activityColors.length]
+  }));
+  
+  // Dati per il grafico dell'andamento mensile
+  // Crea un array con tutti i giorni del mese
+  const monthlyDaysRange = eachDayOfInterval({
+    start: startOfMonth(now),
+    end: now
+  });
+  
+  // Inizializza i dati con zero ore per ogni giorno
+  const monthlyTrendData = monthlyDaysRange.map(day => ({
+    date: format(day, "yyyy-MM-dd"),
+    hours: 0,
+    expenses: 0
+  }));
+  
+  // Popola le ore per ogni giorno
+  timeEntries.forEach(entry => {
+    const entryDate = format(new Date(entry.date), "yyyy-MM-dd");
+    const dayIndex = monthlyTrendData.findIndex(d => d.date === entryDate);
+    if (dayIndex !== -1) {
+      monthlyTrendData[dayIndex].hours += Number(entry.hours);
+    }
+  });
+  
+  // Popola le spese per ogni giorno
+  expenses.forEach(expense => {
+    const expenseDate = format(new Date(expense.date), "yyyy-MM-dd");
+    const dayIndex = monthlyTrendData.findIndex(d => d.date === expenseDate);
+    if (dayIndex !== -1) {
+      monthlyTrendData[dayIndex].expenses += Number(expense.amount);
+    }
+  });
+  
   return (
     <div className="flex min-h-screen bg-neutral-50">
       <Sidebar />
@@ -263,8 +333,17 @@ export default function Dashboard() {
             </div>
           </div>
           
-          {/* Weekly Work Hours Chart and Upcoming Events */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Monthly Trend Chart */}
+          <div className="mb-8">
+            <MonthlyTrendChart 
+              data={monthlyTrendData}
+              title="Andamento Mensile"
+              onExport={handleExportReport}
+            />
+          </div>
+          
+          {/* Weekly Chart and Activity Distribution Chart */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             {/* Weekly Work Hours Chart */}
             <div className="lg:col-span-2">
               <WeeklyChart 
@@ -274,10 +353,18 @@ export default function Dashboard() {
               />
             </div>
             
-            {/* Upcoming Events */}
+            {/* Activity Distribution Chart */}
             <div>
-              <UpcomingEvents events={upcomingEvents} />
+              <ActivityDistributionChart 
+                data={activityDistributionData}
+                title="Distribuzione Attività"
+              />
             </div>
+          </div>
+          
+          {/* Upcoming Events */}
+          <div className="mb-8">
+            <UpcomingEvents events={upcomingEvents} />
           </div>
         </div>
         
