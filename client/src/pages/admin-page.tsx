@@ -18,7 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function AdminPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [selectedTab, setSelectedTab] = useState<string>("timesheets");
+  const [selectedTab, setSelectedTab] = useState<string>("timeEntries");
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [detailsOpen, setDetailsOpen] = useState<boolean>(false);
 
@@ -566,16 +566,16 @@ export default function AdminPage() {
         </CardHeader>
       </Card>
 
-      <Tabs defaultValue="timesheets" value={selectedTab} onValueChange={setSelectedTab}>
+      <Tabs defaultValue="timeEntries" value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="mb-4">
-          <TabsTrigger value="timesheets">Timesheet</TabsTrigger>
+          <TabsTrigger value="timeEntries">Timesheet</TabsTrigger>
           <TabsTrigger value="expenses">Spese</TabsTrigger>
           <TabsTrigger value="trips">Viaggi</TabsTrigger>
           <TabsTrigger value="leaveRequests">Permessi</TabsTrigger>
           <TabsTrigger value="sickLeaves">Malattie</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="timesheets">
+        <TabsContent value="timeEntries">
           <Card>
             <CardHeader>
               <CardTitle>Richieste Timesheet</CardTitle>
