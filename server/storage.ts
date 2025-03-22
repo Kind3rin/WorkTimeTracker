@@ -15,10 +15,13 @@ export interface IStorage {
   // User methods
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, userData: Partial<User>): Promise<User | undefined>;
   updateUserPassword(id: number, password: string): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>; // Nuovo metodo per admin
+  createInvitation(userId: number, token: string, expiresIn: number): Promise<User | undefined>;
+  validateInvitationToken(token: string): Promise<User | undefined>;
   
   // Project methods
   getProject(id: number): Promise<Project | undefined>;
@@ -157,6 +160,12 @@ export class MemStorage implements IStorage {
       (user) => user.username === username,
     );
   }
+  
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.email === email,
+    );
+  }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.userCurrentId++;
@@ -200,6 +209,44 @@ export class MemStorage implements IStorage {
     const updatedUser = { ...user, password };
     this.users.set(userId, updatedUser);
     return updatedUser;
+  }
+  
+  async createInvitation(userId: number, token: string, expiresIn: number): Promise<User | undefined> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      return undefined;
+    }
+    
+    const invitationExpires = new Date();
+    invitationExpires.setHours(invitationExpires.getHours() + expiresIn);
+    
+    const updatedUser = { 
+      ...user, 
+      invitationToken: token,
+      invitationExpires,
+      invitationSent: true,
+      needsPasswordChange: true
+    };
+    
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+  
+  async validateInvitationToken(token: string): Promise<User | undefined> {
+    const user = Array.from(this.users.values()).find(
+      (user) => user.invitationToken === token
+    );
+    
+    if (!user) {
+      return undefined;
+    }
+    
+    // Verifica se il token è scaduto
+    if (user.invitationExpires && new Date() > user.invitationExpires) {
+      return undefined;
+    }
+    
+    return user;
   }
   
   // Project methods

@@ -6,18 +6,26 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
   password: text("password").notNull(),
   fullName: text("full_name").notNull(),
   role: text("role").notNull().default("employee"),
   needsPasswordChange: boolean("needs_password_change").default(true),
+  invitationSent: boolean("invitation_sent").default(false),
+  invitationToken: text("invitation_token"),
+  invitationExpires: timestamp("invitation_expires"),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
+  email: true,
   password: true,
   fullName: true,
   role: true,
   needsPasswordChange: true,
+  invitationSent: true,
+  invitationToken: true,
+  invitationExpires: true,
 });
 
 // Projects table
