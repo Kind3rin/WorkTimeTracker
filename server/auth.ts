@@ -47,6 +47,14 @@ export function setupAuth(app: Express) {
       if (!user || !(await comparePasswords(password, user.password))) {
         return done(null, false);
       } else {
+        // Verifica se è la prima login (per eventuale cambio password)
+        if (user.needsPasswordChange === true) {
+          // Aggiungiamo un flag per la modifica della password
+          return done(null, {
+            ...user,
+            needsPasswordChange: true
+          });
+        }
         return done(null, user);
       }
     }),
@@ -58,25 +66,46 @@ export function setupAuth(app: Express) {
     done(null, user);
   });
 
-  app.post("/api/register", async (req, res, next) => {
-    const existingUser = await storage.getUserByUsername(req.body.username);
-    if (existingUser) {
-      return res.status(400).send("Username already exists");
-    }
-
-    const user = await storage.createUser({
-      ...req.body,
-      password: await hashPassword(req.body.password),
-    });
-
-    req.login(user, (err) => {
-      if (err) return next(err);
-      res.status(201).json(user);
-    });
-  });
+  // La registrazione è rimossa, solo gli admin possono creare utenti
+  // tramite il pannello di amministrazione
 
   app.post("/api/login", passport.authenticate("local"), (req, res) => {
     res.status(200).json(req.user);
+  });
+
+  app.post("/api/change-password", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user!.id;
+    
+    try {
+      // Ottieni l'utente dal database
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Utente non trovato" });
+      }
+      
+      // Verifica la password corrente
+      const isPasswordValid = await comparePasswords(currentPassword, user.password);
+      if (!isPasswordValid) {
+        return res.status(400).json({ message: "Password corrente non valida" });
+      }
+      
+      // Aggiorna la password
+      const hashedPassword = await hashPassword(newPassword);
+      await storage.updateUserPassword(userId, hashedPassword);
+      
+      // Se era necessario cambiare la password, rimuoviamo il flag
+      if (user.needsPasswordChange) {
+        await storage.updateUser(userId, { needsPasswordChange: false });
+      }
+      
+      return res.status(200).json({ message: "Password aggiornata con successo" });
+    } catch (error) {
+      console.error("Errore nel cambio password:", error);
+      return res.status(500).json({ message: "Errore nel cambio password" });
+    }
   });
 
   app.post("/api/logout", (req, res, next) => {
