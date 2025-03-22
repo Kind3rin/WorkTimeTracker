@@ -37,33 +37,69 @@ export default function Dashboard() {
   
   console.log("Dashboard - Start fetching data, user:", user?.id);
   
+  // Definizione delle interfacce per i dati
+  interface TimeEntry {
+    id: number;
+    date: string;
+    description: string;
+    hours: number;
+    activityTypeId: number;
+    status: 'pending' | 'approved' | 'rejected';
+  }
+  
+  interface Expense {
+    id: number;
+    date: string;
+    amount: number;
+    description: string;
+    status: 'pending' | 'approved' | 'rejected';
+  }
+  
+  interface LeaveRequest {
+    id: number;
+    startDate: string;
+    endDate: string;
+    type: string;
+    reason?: string;
+    status: 'pending' | 'approved' | 'rejected';
+  }
+  
+  interface Trip {
+    id: number;
+    startDate: string;
+    endDate: string;
+    destination: string;
+    purpose?: string;
+    status: 'pending' | 'approved' | 'rejected';
+  }
+
   // Set a realistic default for time entries to avoid loading states on empty data
-  const defaultTimeEntries = [];
-  const { data: timeEntries = defaultTimeEntries, isLoading: isLoadingTimeEntries, error: timeEntriesError } = useQuery({
+  const defaultTimeEntries: TimeEntry[] = [];
+  const { data: timeEntries = defaultTimeEntries, isLoading: isLoadingTimeEntries, error: timeEntriesError } = useQuery<TimeEntry[]>({
     queryKey: ["/api/time-entries/range", { startDate: monthStart.toISOString(), endDate: now.toISOString() }],
     enabled: !!user,
     retry: 1, // Reduce retries for faster failure
   });
   
   // Fetch expenses for this month
-  const defaultExpenses = [];
-  const { data: expenses = defaultExpenses, isLoading: isLoadingExpenses, error: expensesError } = useQuery({
+  const defaultExpenses: Expense[] = [];
+  const { data: expenses = defaultExpenses, isLoading: isLoadingExpenses, error: expensesError } = useQuery<Expense[]>({
     queryKey: ["/api/expenses/range", { startDate: monthStart.toISOString(), endDate: now.toISOString() }],
     enabled: !!user,
     retry: 1,
   });
   
   // Fetch leave requests for vacation data
-  const defaultLeaveRequests = [];
-  const { data: leaveRequests = defaultLeaveRequests, isLoading: isLoadingLeave, error: leaveError } = useQuery({
+  const defaultLeaveRequests: LeaveRequest[] = [];
+  const { data: leaveRequests = defaultLeaveRequests, isLoading: isLoadingLeave, error: leaveError } = useQuery<LeaveRequest[]>({
     queryKey: ["/api/leave-requests"],
     enabled: !!user,
     retry: 1,
   });
   
   // Fetch upcoming trips
-  const defaultTrips = [];
-  const { data: trips = defaultTrips, isLoading: isLoadingTrips, error: tripsError } = useQuery({
+  const defaultTrips: Trip[] = [];
+  const { data: trips = defaultTrips, isLoading: isLoadingTrips, error: tripsError } = useQuery<Trip[]>({
     queryKey: ["/api/trips"],
     enabled: !!user,
     retry: 1,
@@ -142,14 +178,23 @@ export default function Dashboard() {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
   
+  // Event interface type to match UpcomingEvents component
+  interface EventItem {
+    id: number;
+    date: string;
+    title: string;
+    description: string;
+    status: "pending" | "confirmed" | "urgent" | "info";
+  }
+
   // Prepare upcoming events
-  const upcomingEvents = [
+  const upcomingEvents: EventItem[] = [
     ...(nextTrip ? [{
       id: nextTrip.id,
       date: nextTrip.startDate,
       title: `Trasferta ${nextTrip.destination}`,
       description: `${format(new Date(nextTrip.startDate), "dd/MM")} - ${format(new Date(nextTrip.endDate), "dd/MM")}${nextTrip.purpose ? ` - ${nextTrip.purpose}` : ''}`,
-      status: nextTrip.status === "approved" ? "confirmed" : "pending",
+      status: nextTrip.status === "approved" ? "confirmed" as const : "pending" as const,
     }] : []),
     ...leaveRequests
       .filter(request => new Date(request.startDate) > now)
@@ -158,7 +203,7 @@ export default function Dashboard() {
         date: request.startDate,
         title: request.type === "vacation" ? "Ferie" : request.type === "sick_leave" ? "Malattia" : "Permesso",
         description: `${format(new Date(request.startDate), "dd/MM")} - ${format(new Date(request.endDate), "dd/MM")}${request.reason ? ` - ${request.reason}` : ''}`,
-        status: request.status === "approved" ? "confirmed" : "pending",
+        status: request.status === "approved" ? "confirmed" as const : "pending" as const,
       }))
   ]
   .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())

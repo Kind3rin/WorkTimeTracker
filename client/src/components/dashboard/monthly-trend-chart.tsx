@@ -55,10 +55,11 @@ export default function MonthlyTrendChart({
       const formattedDate = dateObj.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
       
       return (
-        <div className="bg-white p-3 border rounded-md shadow-sm">
-          <p className="font-medium text-sm">{formattedDate}</p>
+        <div className="bg-white p-2 sm:p-3 border rounded-md shadow-sm text-xs sm:text-sm">
+          <p className="font-medium mb-0.5">{formattedDate}</p>
           {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
+            <p key={index} className="flex items-center gap-1" style={{ color: entry.color }}>
+              <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></span>
               {entry.name === "Ore" ? `${entry.value} ore` : 
                entry.name === "Spese" ? `€${entry.value.toFixed(2)}` : entry.value}
             </p>

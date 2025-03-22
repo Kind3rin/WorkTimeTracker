@@ -7,6 +7,7 @@ import {
   Tooltip
 } from "recharts";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { useState, useEffect } from "react";
 
 interface ActivityDistributionProps {
   data: {
@@ -25,6 +26,8 @@ const renderCustomizedLabel = ({
   innerRadius,
   outerRadius,
   percent,
+  name,
+  index,
 }: {
   cx: number;
   cy: number;
@@ -32,19 +35,24 @@ const renderCustomizedLabel = ({
   innerRadius: number;
   outerRadius: number;
   percent: number;
+  name: string;
+  index: number;
 }) => {
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  
+  // Su dispositivi mobili o con pezzi piccoli della torta, mostriamo solo le percentuali più grandi
+  const minPercentToShow = window.innerWidth < 640 ? 0.08 : 0.05;
 
-  return percent > 0.05 ? (
+  return percent > minPercentToShow ? (
     <text
       x={x}
       y={y}
       fill="white"
       textAnchor={x > cx ? "start" : "end"}
       dominantBaseline="central"
-      fontSize={12}
+      fontSize={window.innerWidth < 640 ? 10 : 12}
       fontWeight={500}
     >
       {`${(percent * 100).toFixed(0)}%`}
