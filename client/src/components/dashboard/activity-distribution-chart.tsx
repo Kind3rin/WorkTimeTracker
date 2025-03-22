@@ -54,12 +54,12 @@ const renderCustomizedLabel = ({
 
 export default function ActivityDistributionChart({ data, title = "Distribuzione Attività" }: ActivityDistributionProps) {
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-medium">{title}</CardTitle>
+    <Card className="h-full">
+      <CardHeader className="pb-0 sm:pb-2 px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6">
+        <CardTitle className="text-base sm:text-lg font-medium">{title}</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="h-[240px]">
+      <CardContent className="px-2 sm:px-4 md:px-6 pb-2 sm:pb-4 md:pb-6">
+        <div className="h-[200px] sm:h-[220px] md:h-[240px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -68,7 +68,8 @@ export default function ActivityDistributionChart({ data, title = "Distribuzione
                 cy="50%"
                 labelLine={false}
                 label={renderCustomizedLabel}
-                outerRadius={90}
+                outerRadius={data.length > 5 ? 70 : 80}
+                innerRadius={data.length > 5 ? 30 : 0}
                 fill="#8884d8"
                 dataKey="value"
               >
@@ -85,7 +86,8 @@ export default function ActivityDistributionChart({ data, title = "Distribuzione
                 verticalAlign="bottom"
                 align="center"
                 iconType="circle"
-                iconSize={8}
+                iconSize={6}
+                formatter={(value) => <span className="text-xs sm:text-sm">{value}</span>}
               />
             </PieChart>
           </ResponsiveContainer>

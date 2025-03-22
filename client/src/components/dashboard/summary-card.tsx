@@ -39,24 +39,24 @@ export default function SummaryCard({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
+    <div className="bg-white rounded-lg shadow-sm p-4 sm:p-5 md:p-6">
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-neutral-500 text-sm font-medium">{title}</p>
-          <h3 className="text-2xl font-semibold mt-1">{value}</h3>
+        <div className="flex-1 min-w-0">
+          <p className="text-neutral-500 text-xs sm:text-sm font-medium truncate">{title}</p>
+          <h3 className="text-lg sm:text-xl md:text-2xl font-semibold mt-1 truncate">{value}</h3>
         </div>
-        <div className="w-12 h-12 bg-primary-50 rounded-full flex items-center justify-center text-primary-500">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary-50 rounded-full flex items-center justify-center text-primary-500 flex-shrink-0 ml-2">
           {icon}
         </div>
       </div>
       <div className="mt-2">
         {changeValue ? (
-          <span className={`${getChangeColor()} text-sm font-medium flex items-center`}>
+          <span className={`${getChangeColor()} text-xs sm:text-sm font-medium flex items-center flex-wrap`}>
             {getChangeIcon()}
-            {changeValue}
+            <span className="truncate">{changeValue}</span>
           </span>
         ) : infoText ? (
-          <span className="text-neutral-500 text-sm font-medium">{infoText}</span>
+          <span className="text-neutral-500 text-xs sm:text-sm font-medium truncate block">{infoText}</span>
         ) : null}
       </div>
     </div>

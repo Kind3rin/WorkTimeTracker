@@ -53,43 +53,45 @@ export default function ActivityTable({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-      <div className="px-6 py-4 border-b flex justify-between items-center">
-        <h2 className="text-lg font-medium">{caption}</h2>
+    <div className="bg-white rounded-lg shadow-sm overflow-hidden h-full">
+      <div className="px-3 sm:px-6 py-3 sm:py-4 border-b flex justify-between items-center">
+        <h2 className="text-base sm:text-lg font-medium">{caption}</h2>
         {showViewAll && (
           <Button 
             variant="ghost" 
-            className="text-primary-500 hover:text-primary-600 hover:bg-transparent text-sm font-medium"
+            size="sm"
+            className="text-primary-500 hover:text-primary-600 hover:bg-transparent text-xs sm:text-sm font-medium h-8 px-2"
             onClick={onViewAll}
           >
-            Vedi Tutte
+            <span className="hidden sm:inline">Vedi Tutte</span>
+            <span className="sm:hidden">Vedi</span>
           </Button>
         )}
       </div>
       
-      <div className="p-6">
+      <div className="p-2 sm:p-4 md:p-6 overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-neutral-500 text-sm font-medium">Data</TableHead>
-              <TableHead className="text-neutral-500 text-sm font-medium">Attività</TableHead>
-              <TableHead className="text-neutral-500 text-sm font-medium">Ore</TableHead>
-              <TableHead className="text-neutral-500 text-sm font-medium">Stato</TableHead>
+              <TableHead className="text-neutral-500 text-xs sm:text-sm font-medium py-2 px-2 sm:px-4">Data</TableHead>
+              <TableHead className="text-neutral-500 text-xs sm:text-sm font-medium py-2 px-2 sm:px-4">Attività</TableHead>
+              <TableHead className="text-neutral-500 text-xs sm:text-sm font-medium py-2 px-2 sm:px-4">Ore</TableHead>
+              <TableHead className="text-neutral-500 text-xs sm:text-sm font-medium py-2 px-2 sm:px-4">Stato</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {displayActivities.length > 0 ? (
               displayActivities.map((activity) => (
-                <TableRow key={activity.id} className="border-b text-sm">
-                  <TableCell className="py-3 text-neutral-500">{formatDate(activity.date)}</TableCell>
-                  <TableCell className="py-3">{activity.activity}</TableCell>
-                  <TableCell className="py-3">{activity.hours}</TableCell>
-                  <TableCell className="py-3">{getStatusBadge(activity.status)}</TableCell>
+                <TableRow key={activity.id} className="border-b text-xs sm:text-sm">
+                  <TableCell className="py-2 sm:py-3 px-2 sm:px-4 text-neutral-500 whitespace-nowrap">{formatDate(activity.date)}</TableCell>
+                  <TableCell className="py-2 sm:py-3 px-2 sm:px-4 max-w-[100px] sm:max-w-[200px] truncate">{activity.activity}</TableCell>
+                  <TableCell className="py-2 sm:py-3 px-2 sm:px-4 whitespace-nowrap">{activity.hours}</TableCell>
+                  <TableCell className="py-2 sm:py-3 px-2 sm:px-4 whitespace-nowrap">{getStatusBadge(activity.status)}</TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-4 text-neutral-500">
+                <TableCell colSpan={4} className="text-center py-3 sm:py-4 text-neutral-500 text-xs sm:text-sm">
                   Nessuna attività registrata
                 </TableCell>
               </TableRow>
