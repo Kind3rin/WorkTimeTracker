@@ -81,16 +81,9 @@ export function DataTable<TData, TValue>({
             >
               {row.getVisibleCells().map((cell) => {
                 // Get the header text for this cell's column
-                let header = cell.column.columnDef.header;
-                if (typeof header === 'string') {
-                  header = header;
-                } else if (
-                  cell.column.columnDef.header && 
-                  typeof cell.column.columnDef.header === 'function'
-                ) {
-                  // Create a basic string representation for the header
-                  header = cell.column.id.charAt(0).toUpperCase() + cell.column.id.slice(1);
-                }
+                const header = typeof cell.column.columnDef.header === 'string' 
+                  ? cell.column.columnDef.header 
+                  : cell.column.id.charAt(0).toUpperCase() + cell.column.id.slice(1);
                 
                 // Skip rendering the Actions column as-is; we'll handle it specially
                 if (cell.column.id === 'actions') {

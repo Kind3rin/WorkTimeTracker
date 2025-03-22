@@ -250,7 +250,7 @@ export default function ExpensesPage() {
         <TopBar />
         
         <main className="flex-grow overflow-y-auto p-4 md:p-6 bg-neutral-lightest">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <div>
               <h1 className="text-2xl font-bold">Note Spese</h1>
               <p className="text-neutral-medium text-sm">Gestisci le tue spese lavorative</p>
@@ -258,7 +258,7 @@ export default function ExpensesPage() {
             
             <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
               <DialogTrigger asChild>
-                <Button className="flex items-center">
+                <Button className="w-full sm:w-auto flex items-center justify-center">
                   <i className="ri-add-line mr-1"></i>
                   <span>Nuova Spesa</span>
                 </Button>

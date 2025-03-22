@@ -36,3 +36,23 @@ export function getStatusTranslation(status: string) {
       return 'In attesa';
   }
 }
+
+export function formatCurrency(amount: string | number) {
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(numAmount);
+}
+
+export function getExpenseCategoryTranslation(category: string) {
+  const categories: Record<string, string> = {
+    'travel': 'Viaggio',
+    'food': 'Pasti',
+    'lodging': 'Alloggio',
+    'office': 'Materiale ufficio',
+    'other': 'Altro',
+    'transportation': 'Trasporto',
+    'entertainment': 'Intrattenimento',
+    'training': 'Formazione',
+  };
+  
+  return categories[category] || category;
+}

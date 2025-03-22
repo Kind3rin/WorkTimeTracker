@@ -149,7 +149,7 @@ export default function TimesheetPage() {
     form.reset({
       projectId: timeEntry.projectId,
       date: new Date(timeEntry.date),
-      hours: timeEntry.hours,
+      hours: typeof timeEntry.hours === 'string' ? parseFloat(timeEntry.hours) : timeEntry.hours,
       description: timeEntry.description || "",
     });
   };
@@ -178,7 +178,7 @@ export default function TimesheetPage() {
       accessorKey: "projectId",
       header: "Progetto",
       cell: ({ row }) => {
-        const project = projects?.find((p) => p.id === row.original.projectId);
+        const project = Array.isArray(projects) ? projects.find((p) => p.id === row.original.projectId) : null;
         return <div>{project ? project.name : `Progetto ${row.original.projectId}`}</div>;
       },
     },
