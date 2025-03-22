@@ -747,113 +747,113 @@ export default function AdminPage() {
           </TabsList>
 
           <TabsContent value="timeEntries">
-          <Card>
-            <CardHeader>
-              <CardTitle>Richieste Timesheet</CardTitle>
-              <CardDescription>
-                Gestisci e approva le richieste di timesheet pendenti
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DataTable
-                columns={timeEntryColumns}
-                data={pendingItems || []}
-                searchKey="status"
-                searchPlaceholder="Filtra per stato..."
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
+            <Card>
+              <CardHeader>
+                <CardTitle>Richieste Timesheet</CardTitle>
+                <CardDescription>
+                  Gestisci e approva le richieste di timesheet pendenti
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DataTable
+                  columns={timeEntryColumns}
+                  data={pendingItems || []}
+                  searchKey="status"
+                  searchPlaceholder="Filtra per stato..."
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="expenses">
-          <Card>
-            <CardHeader>
-              <CardTitle>Richieste Spese</CardTitle>
-              <CardDescription>
-                Gestisci e approva le richieste di rimborso spese pendenti
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DataTable
-                columns={expenseColumns}
-                data={pendingItems || []}
-                searchKey="status"
-                searchPlaceholder="Filtra per stato..."
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
+          <TabsContent value="expenses">
+            <Card>
+              <CardHeader>
+                <CardTitle>Richieste Spese</CardTitle>
+                <CardDescription>
+                  Gestisci e approva le richieste di rimborso spese pendenti
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DataTable
+                  columns={expenseColumns}
+                  data={pendingItems || []}
+                  searchKey="status"
+                  searchPlaceholder="Filtra per stato..."
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="trips">
-          <Card>
-            <CardHeader>
-              <CardTitle>Richieste Viaggi</CardTitle>
-              <CardDescription>
-                Gestisci e approva le richieste di viaggio pendenti
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DataTable
-                columns={tripColumns}
-                data={pendingItems || []}
-                searchKey="status"
-                searchPlaceholder="Filtra per stato..."
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
+          <TabsContent value="trips">
+            <Card>
+              <CardHeader>
+                <CardTitle>Richieste Viaggi</CardTitle>
+                <CardDescription>
+                  Gestisci e approva le richieste di viaggio pendenti
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DataTable
+                  columns={tripColumns}
+                  data={pendingItems || []}
+                  searchKey="status"
+                  searchPlaceholder="Filtra per stato..."
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="leaveRequests">
-          <Card>
-            <CardHeader>
-              <CardTitle>Richieste Permessi</CardTitle>
-              <CardDescription>
-                Gestisci e approva le richieste di permesso pendenti
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DataTable
-                columns={leaveRequestColumns}
-                data={pendingItems || []}
-                searchKey="status"
-                searchPlaceholder="Filtra per stato..."
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
+          <TabsContent value="leaveRequests">
+            <Card>
+              <CardHeader>
+                <CardTitle>Richieste Permessi</CardTitle>
+                <CardDescription>
+                  Gestisci e approva le richieste di permesso pendenti
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DataTable
+                  columns={leaveRequestColumns}
+                  data={pendingItems || []}
+                  searchKey="status"
+                  searchPlaceholder="Filtra per stato..."
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="sickLeaves">
-          <Card>
-            <CardHeader>
-              <CardTitle>Certificati Malattia</CardTitle>
-              <CardDescription>
-                Gestisci e approva i certificati di malattia pendenti
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DataTable
-                columns={sickLeaveColumns}
-                data={pendingItems || []}
-                searchKey="status"
-                searchPlaceholder="Filtra per stato..."
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
+          <TabsContent value="sickLeaves">
+            <Card>
+              <CardHeader>
+                <CardTitle>Certificati Malattia</CardTitle>
+                <CardDescription>
+                  Gestisci e approva i certificati di malattia pendenti
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DataTable
+                  columns={sickLeaveColumns}
+                  data={pendingItems || []}
+                  searchKey="status"
+                  searchPlaceholder="Filtra per stato..."
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="users">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gestione Utenti</CardTitle>
-              <CardDescription>
-                Gestisci gli utenti del sistema, i loro ruoli e le loro password
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <UserManagement />
-            </CardContent>
-          </Card>
-        </TabsContent>
+          <TabsContent value="users">
+            <Card>
+              <CardHeader>
+                <CardTitle>Gestione Utenti</CardTitle>
+                <CardDescription>
+                  Gestisci gli utenti del sistema, i loro ruoli e le loro password
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <UserManagement />
+              </CardContent>
+            </Card>
+          </TabsContent>
       </Tabs>
 
       {/* Dialog per la creazione di un nuovo utente */}
