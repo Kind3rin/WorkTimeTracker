@@ -72,12 +72,12 @@ export function DataTable<TData, TValue>({
       )}
       
       {/* Mobile View - Card Layout */}
-      <div className="md:hidden space-y-3">
+      <div className="md:hidden space-y-4">
         {table.getRowModel().rows?.length ? (
           table.getRowModel().rows.map((row) => (
             <div
               key={row.id}
-              className="bg-white p-3 rounded-lg border shadow-sm"
+              className="bg-white p-4 rounded-lg border shadow-sm"
             >
               {row.getVisibleCells().map((cell) => {
                 // Get the header text for this cell's column
@@ -88,18 +88,18 @@ export function DataTable<TData, TValue>({
                 // Skip rendering the Actions column as-is; we'll handle it specially
                 if (cell.column.id === 'actions') {
                   return (
-                    <div key={cell.id} className="mt-3 flex justify-end border-t pt-2">
+                    <div key={cell.id} className="mt-3 flex flex-wrap justify-end gap-2 border-t pt-3">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </div>
                   );
                 }
                 
                 return (
-                  <div key={cell.id} className="py-1.5 flex items-start justify-between gap-2">
-                    <span className="text-sm font-medium text-neutral-500 min-w-[30%] truncate">
+                  <div key={cell.id} className="py-1.5 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
+                    <span className="text-sm font-medium text-neutral-500 min-w-[30%]">
                       {header}
                     </span>
-                    <span className="text-sm text-right flex-1">
+                    <span className="text-sm sm:text-right flex-1 break-words">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </span>
                   </div>
@@ -162,29 +162,31 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
       
-      <div className="flex items-center justify-between sm:justify-end gap-2 py-4">
-        <div className="text-sm text-neutral-500 md:mr-4">
+      <div className="flex flex-col sm:flex-row items-center justify-between sm:justify-end gap-3 py-4">
+        <div className="text-sm text-neutral-500 sm:mr-4 w-full sm:w-auto text-center">
           Pagina {table.getState().pagination.pageIndex + 1} di{" "}
           {table.getPageCount()}
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-          className="text-xs h-8 px-2.5"
-        >
-          Precedente
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-          className="text-xs h-8 px-2.5"
-        >
-          Successivo
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+            className="text-xs h-8 px-2.5 flex-1 sm:flex-initial"
+          >
+            Precedente
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+            className="text-xs h-8 px-2.5 flex-1 sm:flex-initial"
+          >
+            Successivo
+          </Button>
+        </div>
       </div>
     </div>
   );

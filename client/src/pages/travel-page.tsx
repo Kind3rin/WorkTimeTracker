@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Travel, insertTravelSchema } from "@shared/schema";
+import { Trip, insertTripSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/layout/sidebar";
@@ -50,12 +50,12 @@ const formSchema = z.object({
 
 export default function TravelPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [travelToEdit, setTravelToEdit] = useState<Travel | null>(null);
-  const [travelToDelete, setTravelToDelete] = useState<Travel | null>(null);
+  const [travelToEdit, setTravelToEdit] = useState<Trip | null>(null);
+  const [travelToDelete, setTravelToDelete] = useState<Trip | null>(null);
   
   const { toast } = useToast();
 
-  const { data: travels, isLoading } = useQuery<Travel[]>({
+  const { data: travels, isLoading } = useQuery<Trip[]>({
     queryKey: ["/api/travels"],
   });
 
@@ -136,7 +136,7 @@ export default function TravelPage() {
     },
   });
 
-  const openEditModal = (travel: Travel) => {
+  const openEditModal = (travel: Trip) => {
     setTravelToEdit(travel);
     form.reset({
       destination: travel.destination,
@@ -160,7 +160,7 @@ export default function TravelPage() {
     }
   };
 
-  const columns: ColumnDef<Travel>[] = [
+  const columns: ColumnDef<Trip>[] = [
     {
       accessorKey: "destination",
       header: "Destinazione",
