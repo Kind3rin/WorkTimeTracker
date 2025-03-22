@@ -470,7 +470,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const newUser = await storage.createUser({
         ...userData,
-        password: hashedPassword
+        password: hashedPassword,
+        needsPasswordChange: true // Imposta il flag per richiedere il cambio password al primo accesso
       });
       
       // Rimuovi la password dalla risposta

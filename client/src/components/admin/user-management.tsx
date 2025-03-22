@@ -53,7 +53,8 @@ const newUserSchema = z.object({
   username: z.string().min(3, "Username deve essere di almeno 3 caratteri"),
   fullName: z.string().min(2, "Nome completo richiesto"),
   password: z.string().min(6, "La password deve essere di almeno 6 caratteri"),
-  role: z.enum(["employee", "admin"])
+  role: z.enum(["employee", "admin"]),
+  needsPasswordChange: z.boolean().optional().default(true)
 });
 
 // User role change schema
@@ -79,7 +80,8 @@ export default function UserManagement() {
       username: "",
       fullName: "",
       password: "",
-      role: "employee"
+      role: "employee",
+      needsPasswordChange: true
     }
   });
 
