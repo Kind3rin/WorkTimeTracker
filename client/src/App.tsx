@@ -15,6 +15,7 @@ import SickleavePage from "@/pages/sickleave-page";
 import Reports from "@/pages/reports";
 import SettingsPage from "@/pages/settings-page";
 import AdminPage from "@/pages/admin-page";
+import InvitationPage from "@/pages/invitation-page";
 import { ChangePasswordDialog } from "@/components/change-password-dialog";
 
 function Router() {
@@ -30,6 +31,7 @@ function Router() {
       <ProtectedRoute path="/settings" component={SettingsPage} />
       <ProtectedRoute path="/admin" component={AdminPage} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/invitation/:token" component={InvitationPage} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -465,26 +465,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/users", isAdmin, async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);
-      // Non possiamo usare la stessa funzione che viene usata per registrare un utente normale
-      // perché l'admin deve poter specificare il ruolo (che normalmente è hardcoded a "employee")
-      const hashedPassword = await hashPassword(userData.password);
       
+      // Verifica se esiste già un utente con la stessa email
+      const existingUserWithEmail = await storage.getUserByEmail(userData.email);
+      if (existingUserWithEmail) {
+        return res.status(400).json({ error: "Email già in uso" });
+      }
+      
+      // Genera una password temporanea casuale
+      const temporaryPassword = generateTemporaryPassword();
+      const hashedPassword = await hashPassword(temporaryPassword);
+      
+      // Crea il nuovo utente
       const newUser = await storage.createUser({
         ...userData,
         password: hashedPassword,
-        needsPasswordChange: true // Imposta il flag per richiedere il cambio password al primo accesso
+        needsPasswordChange: true, // Imposta il flag per richiedere il cambio password al primo accesso
+        invitationSent: false,
+        invitationToken: null,
+        invitationExpires: null
       });
       
       // Rimuovi la password dalla risposta
       const { password, ...userWithoutPassword } = newUser;
       
-      res.status(201).json(userWithoutPassword);
+      // Restituisci l'utente creato con la password temporanea
+      // La password temporanea viene restituita solo in questo endpoint per consentire all'admin
+      // di comunicarla all'utente se non può essere inviata via email
+      res.status(201).json({
+        ...userWithoutPassword,
+        temporaryPassword
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ error: error.errors });
       }
       console.error("Error creating user:", error);
       res.status(500).json({ error: "Errore durante la creazione dell'utente" });
+    }
+  });
+  
+  // API per inviare l'invito a un utente via email (solo admin)
+  app.post("/api/admin/users/:userId/invite", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Verifica che l'utente esista
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "Utente non trovato" });
+      }
+      
+      // Genera token e password temporanea
+      const invitationToken = generateInvitationToken();
+      const temporaryPassword = generateTemporaryPassword();
+      const hashedPassword = await hashPassword(temporaryPassword);
+      
+      // Aggiorna l'utente con il token e la nuova password
+      const updatedUser = await storage.updateUser(userId, {
+        password: hashedPassword,
+        needsPasswordChange: true
+      });
+      
+      if (!updatedUser) {
+        return res.status(500).json({ error: "Errore durante l'aggiornamento dell'utente" });
+      }
+      
+      // Registra il token di invito (valido per 24 ore)
+      await storage.createInvitation(userId, invitationToken, 24);
+      
+      // Invia l'email
+      const emailSent = await sendInvitationEmail(
+        updatedUser,
+        temporaryPassword,
+        invitationToken
+      );
+      
+      if (!emailSent) {
+        return res.status(500).json({ 
+          error: "Errore durante l'invio dell'email di invito. L'utente è stato creato ma l'invito non è stato inviato.", 
+          temporaryPassword,
+          invitationToken
+        });
+      }
+      
+      res.status(200).json({ 
+        message: "Invito inviato con successo", 
+        temporaryPassword,
+        invitationToken 
+      });
+    } catch (error) {
+      console.error("Error sending invitation:", error);
+      res.status(500).json({ error: "Errore durante l'invio dell'invito" });
     }
   });
   
@@ -755,6 +827,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error(`Error ${req.params.action}ing expense:`, error);
       res.status(500).json({ error: `Errore durante l'${req.params.action === "approve" ? "approvazione" : "rifiuto"} della spesa` });
+    }
+  });
+
+  // API per verificare un token di invito
+  app.get("/api/invitation/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      
+      if (!token) {
+        return res.status(400).json({ error: "Token mancante" });
+      }
+      
+      // Verifica se il token esiste e non è scaduto
+      const user = await storage.validateInvitationToken(token);
+      
+      if (!user) {
+        return res.status(404).json({ error: "Token non valido o scaduto" });
+      }
+      
+      // Ritorna le informazioni dell'utente senza dati sensibili
+      const { password, invitationToken, invitationExpires, ...userInfo } = user;
+      
+      res.json({ user: userInfo });
+    } catch (error) {
+      console.error("Error validating invitation token:", error);
+      res.status(500).json({ error: "Errore durante la verifica del token" });
+    }
+  });
+  
+  // API per accettare l'invito e impostare la nuova password
+  app.post("/api/invitation/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      const { newPassword } = req.body;
+      
+      if (!token) {
+        return res.status(400).json({ error: "Token mancante" });
+      }
+      
+      if (!newPassword || newPassword.length < 8) {
+        return res.status(400).json({ error: "La password deve contenere almeno 8 caratteri" });
+      }
+      
+      // Verifica se il token esiste e non è scaduto
+      const user = await storage.validateInvitationToken(token);
+      
+      if (!user) {
+        return res.status(404).json({ error: "Token non valido o scaduto" });
+      }
+      
+      // Genera l'hash della nuova password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Aggiorna l'utente con la nuova password e rimuovi i dati di invito
+      const updatedUser = await storage.updateUser(user.id, {
+        password: hashedPassword,
+        needsPasswordChange: false,
+        invitationSent: true,
+        invitationToken: null,
+        invitationExpires: null
+      });
+      
+      if (!updatedUser) {
+        return res.status(500).json({ error: "Errore durante l'aggiornamento dell'utente" });
+      }
+      
+      res.json({ success: true, message: "Password impostata con successo" });
+    } catch (error) {
+      console.error("Error accepting invitation:", error);
+      res.status(500).json({ error: "Errore durante l'accettazione dell'invito" });
     }
   });
 

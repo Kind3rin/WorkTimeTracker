@@ -52,6 +52,7 @@ import * as z from "zod";
 const newUserSchema = z.object({
   username: z.string().min(3, "Username deve essere di almeno 3 caratteri"),
   fullName: z.string().min(2, "Nome completo richiesto"),
+  email: z.string().email("Inserire un indirizzo email valido"),
   password: z.string().min(6, "La password deve essere di almeno 6 caratteri"),
   role: z.enum(["employee", "admin"]),
   needsPasswordChange: z.boolean().optional().default(true)
@@ -79,6 +80,7 @@ export default function UserManagement() {
     defaultValues: {
       username: "",
       fullName: "",
+      email: "",
       password: "",
       role: "employee",
       needsPasswordChange: true
@@ -339,6 +341,19 @@ export default function UserManagement() {
                     <FormLabel>Nome Completo</FormLabel>
                     <FormControl>
                       <Input placeholder="Nome e Cognome" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={newUserForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="email@esempio.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
