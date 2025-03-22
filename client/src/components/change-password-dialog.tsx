@@ -44,11 +44,6 @@ export function ChangePasswordDialog() {
   const { user, changePasswordMutation } = useAuth();
   const [open, setOpen] = useState(true);
   
-  // Se l'utente non ha bisogno di cambiare password, non mostriamo il dialog
-  if (!user?.needsPasswordChange) {
-    return null;
-  }
-
   const form = useForm<ChangePasswordFormValues>({
     resolver: zodResolver(changePasswordSchema),
     defaultValues: {
@@ -57,6 +52,11 @@ export function ChangePasswordDialog() {
       confirmPassword: ""
     }
   });
+  
+  // Se l'utente non ha bisogno di cambiare password, non mostriamo il dialog
+  if (!user?.needsPasswordChange) {
+    return null;
+  }
 
   function onSubmit(data: ChangePasswordFormValues) {
     // Estraiamo i dati rilevanti e inviamo la richiesta
