@@ -246,23 +246,23 @@ export default function TimesheetPage() {
   ];
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex flex-col lg:flex-row min-h-screen overflow-hidden">
       <Sidebar />
       
       <div className="flex-grow flex flex-col h-full overflow-hidden">
         <TopBar />
         
-        <main className="flex-grow overflow-y-auto p-4 md:p-6 bg-neutral-lightest">
-          <div className="flex justify-between items-center mb-6">
+        <main className="flex-grow overflow-y-auto p-3 sm:p-4 md:p-6 bg-neutral-50">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-6 gap-3 sm:gap-0">
             <div>
-              <h1 className="text-2xl font-bold">Consuntivi</h1>
-              <p className="text-neutral-medium text-sm">Gestisci le tue ore lavorative</p>
+              <h1 className="text-xl md:text-2xl font-bold">Consuntivi</h1>
+              <p className="text-neutral-500 text-xs sm:text-sm">Gestisci le tue ore lavorative</p>
             </div>
             
             <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
               <DialogTrigger asChild>
-                <Button className="flex items-center">
-                  <i className="ri-add-line mr-1"></i>
+                <Button className="flex items-center w-full sm:w-auto justify-center">
+                  <span className="mr-1">+</span>
                   <span>Nuovo Consuntivo</span>
                 </Button>
               </DialogTrigger>
