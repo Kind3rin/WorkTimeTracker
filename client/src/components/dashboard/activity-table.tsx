@@ -53,7 +53,7 @@ export default function ActivityTable({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm overflow-hidden h-full">
+    <div className="bg-white rounded-lg shadow overflow-hidden h-full">
       <div className="px-3 sm:px-6 py-3 sm:py-4 border-b flex justify-between items-center">
         <h2 className="text-base sm:text-lg font-medium">{caption}</h2>
         {showViewAll && (
@@ -69,7 +69,30 @@ export default function ActivityTable({
         )}
       </div>
       
-      <div className="p-2 sm:p-4 md:p-6 overflow-x-auto">
+      {/* Mobile View - Card Layout */}
+      <div className="block md:hidden">
+        {displayActivities.length > 0 ? (
+          <div className="divide-y">
+            {displayActivities.map((activity) => (
+              <div key={activity.id} className="p-3 hover:bg-neutral-50 transition-colors">
+                <div className="flex justify-between mb-1">
+                  <span className="text-xs font-medium text-neutral-500">{formatDate(activity.date)}</span>
+                  <span className="text-xs font-medium">{activity.hours} ore</span>
+                </div>
+                <p className="text-sm font-medium mb-2 line-clamp-2">{activity.activity}</p>
+                <div>{getStatusBadge(activity.status)}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-4 text-center text-neutral-500 text-sm">
+            Nessuna attività registrata
+          </div>
+        )}
+      </div>
+      
+      {/* Desktop View - Table Layout */}
+      <div className="hidden md:block p-2 sm:p-4 md:p-6 overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -82,9 +105,9 @@ export default function ActivityTable({
           <TableBody>
             {displayActivities.length > 0 ? (
               displayActivities.map((activity) => (
-                <TableRow key={activity.id} className="border-b text-xs sm:text-sm">
+                <TableRow key={activity.id} className="border-b text-xs sm:text-sm hover:bg-neutral-50 transition-colors">
                   <TableCell className="py-2 sm:py-3 px-2 sm:px-4 text-neutral-500 whitespace-nowrap">{formatDate(activity.date)}</TableCell>
-                  <TableCell className="py-2 sm:py-3 px-2 sm:px-4 max-w-[100px] sm:max-w-[200px] truncate">{activity.activity}</TableCell>
+                  <TableCell className="py-2 sm:py-3 px-2 sm:px-4 max-w-[100px] sm:max-w-[300px] truncate">{activity.activity}</TableCell>
                   <TableCell className="py-2 sm:py-3 px-2 sm:px-4 whitespace-nowrap">{activity.hours}</TableCell>
                   <TableCell className="py-2 sm:py-3 px-2 sm:px-4 whitespace-nowrap">{getStatusBadge(activity.status)}</TableCell>
                 </TableRow>

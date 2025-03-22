@@ -149,15 +149,28 @@ export default function Dashboard() {
   // Calculate total weekly hours
   const totalWeeklyHours = weeklyTimeData.reduce((sum, day) => sum + day.hours, 0);
   
-  // Calculate remaining vacation days
-  const totalVacationDays = 25; // Example: 25 vacation days per year
+  // Parametri configurabili per ferie e permessi
+  const totalVacationDays = 25; // Giorni totali di ferie all'anno (dovrebbe provenire dalle configurazioni utente)
+  const totalLeaveHours = 40; // Ore totali di permesso (dovrebbe provenire dalle configurazioni utente)
+  
+  // Calcolo delle ferie utilizzate in giorni
   const usedVacationDays = leaveRequests
     .filter(request => request.type === "vacation" && request.status !== "rejected")
     .reduce((sum, request) => {
       return sum + differenceInDays(new Date(request.endDate), new Date(request.startDate)) + 1;
     }, 0);
   
+  // Calcolo permessi utilizzati (convertiti in ore)
+  const usedLeaveHours = leaveRequests
+    .filter(request => request.type === "leave" && request.status !== "rejected")
+    .reduce((sum, request) => {
+      // Calcolo ore di permesso usate
+      const days = differenceInDays(new Date(request.endDate), new Date(request.startDate)) + 1;
+      return sum + (days * 8); // Assume 8 ore per giorno lavorativo
+    }, 0);
+  
   const remainingVacationDays = totalVacationDays - usedVacationDays;
+  const remainingLeaveHours = totalLeaveHours - usedLeaveHours;
   
   // Find next business trip
   const upcomingTrips = trips
@@ -317,10 +330,10 @@ export default function Dashboard() {
   });
   
   return (
-    <div className="flex min-h-screen bg-neutral-50">
+    <div className="flex min-h-screen bg-neutral-50 flex-col lg:flex-row overflow-hidden">
       <Sidebar />
       
-      <div className="lg:ml-64 flex-1 min-h-screen">
+      <div className="lg:ml-64 flex-1 min-h-screen overflow-y-auto">
         <div className="p-3 sm:p-4 md:p-6">
           <header className="mb-4 md:mb-6 lg:mb-8">
             <h1 className="text-xl md:text-2xl font-semibold text-neutral-800">Dashboard</h1>
@@ -328,7 +341,7 @@ export default function Dashboard() {
           </header>
           
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 md:gap-6 mb-6 md:mb-8">
             <SummaryCard
               title="Ore Registrate (Mese)"
               value={`${totalMonthlyHours.toFixed(1)}`}
@@ -350,6 +363,13 @@ export default function Dashboard() {
               value={`${remainingVacationDays} giorni`}
               icon={<Calendar className="h-5 w-5 md:h-6 md:w-6" />}
               infoText="Scadenza: 31/12/2023"
+            />
+            
+            <SummaryCard
+              title="Permessi Rimanenti"
+              value={`${remainingLeaveHours} ore`}
+              icon={<Calendar className="h-5 w-5 md:h-6 md:w-6" />}
+              infoText="Aggiornato al giorno corrente"
             />
             
             <SummaryCard
@@ -378,38 +398,64 @@ export default function Dashboard() {
             </div>
           </div>
           
-          {/* Monthly Trend Chart */}
-          <div className="mb-6 md:mb-8 overflow-x-auto">
-            <MonthlyTrendChart 
-              data={monthlyTrendData}
-              title="Andamento Mensile"
-              onExport={handleExportReport}
-            />
-          </div>
-          
-          {/* Weekly Chart and Activity Distribution Chart */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-            {/* Weekly Work Hours Chart */}
-            <div className="lg:col-span-2 overflow-x-auto order-2 lg:order-1">
-              <WeeklyChart 
-                data={weeklyTimeData}
-                totalHours={totalWeeklyHours}
-                onExport={handleExportReport}
-              />
+          {/* Charts Section - Mobile First Layout */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+            {/* Left Column - Mobile: Full Width, Desktop: 2/3 Width */}
+            <div className="xl:col-span-2 space-y-6">
+              {/* Monthly Trend Chart */}
+              <div className="overflow-x-auto bg-white rounded-lg shadow p-4">
+                <h3 className="text-lg font-medium mb-4">Andamento Mensile</h3>
+                <div className="min-h-[300px] min-w-[600px] sm:min-w-0">
+                  <MonthlyTrendChart 
+                    data={monthlyTrendData}
+                    title=""
+                    onExport={handleExportReport}
+                  />
+                </div>
+              </div>
+
+              {/* Weekly Chart */}
+              <div className="overflow-x-auto bg-white rounded-lg shadow p-4">
+                <h3 className="text-lg font-medium mb-4">Ore Settimanali</h3>
+                <div className="min-h-[300px] min-w-[600px] sm:min-w-0">
+                  <WeeklyChart 
+                    data={weeklyTimeData}
+                    totalHours={totalWeeklyHours}
+                    onExport={handleExportReport}
+                  />
+                </div>
+              </div>
+              
+              {/* Upcoming Events - Mobile: Bottom, Desktop: Bottom Left */}
+              <div className="bg-white rounded-lg shadow">
+                <UpcomingEvents events={upcomingEvents} />
+              </div>
             </div>
             
-            {/* Activity Distribution Chart */}
-            <div className="order-1 lg:order-2 mb-4 lg:mb-0">
-              <ActivityDistributionChart 
-                data={activityDistributionData}
-                title="Distribuzione Attività"
-              />
+            {/* Right Column - Mobile: Full Width, Desktop: 1/3 Width */}
+            <div className="space-y-6">
+              {/* Activity Distribution Chart */}
+              <div className="bg-white rounded-lg shadow p-4">
+                <h3 className="text-lg font-medium mb-4">Distribuzione Attività</h3>
+                <div className="min-h-[300px]">
+                  <ActivityDistributionChart 
+                    data={activityDistributionData}
+                    title=""
+                  />
+                </div>
+              </div>
+              
+              {/* Recent Activities - Shown in right column on desktop */}
+              <div className="bg-white rounded-lg shadow p-4 hidden xl:block">
+                <h3 className="text-lg font-medium mb-4">Attività Recenti</h3>
+                <ActivityTable 
+                  activities={recentActivities.slice(0, 3)} 
+                  caption=""
+                  showViewAll={true}
+                  onViewAll={() => navigate("/timesheet")}
+                />
+              </div>
             </div>
-          </div>
-          
-          {/* Upcoming Events */}
-          <div className="mb-6 md:mb-8">
-            <UpcomingEvents events={upcomingEvents} />
           </div>
         </div>
         
