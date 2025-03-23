@@ -1,4 +1,4 @@
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { 
   LayoutDashboard, 
   Clock, 
@@ -7,15 +7,33 @@ import {
   Calendar,
   Activity,
   BarChart,
-  Menu
+  Menu,
+  Settings,
+  X
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function BottomNav() {
-  const [location] = useLocation();
+  // Usa window.location.pathname invece di useLocation per compatibilità
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const { user } = useAuth();
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  
+  // Aggiorna il percorso quando cambia
+  useEffect(() => {
+    const updatePath = () => {
+      setCurrentPath(window.location.pathname);
+    };
+    
+    // Aggiorna all'inizio e quando cambia la posizione
+    updatePath();
+    window.addEventListener('popstate', updatePath);
+    
+    return () => {
+      window.removeEventListener('popstate', updatePath);
+    };
+  }, []);
   
   const mainLinks = [
     { href: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -62,7 +80,7 @@ export default function BottomNav() {
               onClick={() => setIsMoreMenuOpen(false)}
             >
               <div className={`flex flex-col items-center justify-center p-3 rounded-md ${
-                location === link.href ? 'bg-primary-50 text-primary-500' : 'text-neutral-600'
+                currentPath === link.href ? 'bg-primary-50 text-primary-500' : 'text-neutral-600'
               }`}>
                 <link.icon className="h-6 w-6 mb-1" />
                 <span className="text-xs font-medium">{link.label}</span>
@@ -78,10 +96,10 @@ export default function BottomNav() {
           {mainLinks.map((link) => (
             <Link key={link.href} href={link.href}>
               <div className="flex flex-col items-center">
-                <div className={`p-1.5 ${location === link.href ? 'text-primary-500' : 'text-neutral-500'}`}>
+                <div className={`p-1.5 ${currentPath === link.href ? 'text-primary-500' : 'text-neutral-500'}`}>
                   <link.icon className="h-6 w-6" />
                 </div>
-                <span className={`text-xs mt-0.5 ${location === link.href ? 'font-medium text-primary-500' : 'text-neutral-500'}`}>
+                <span className={`text-xs mt-0.5 ${currentPath === link.href ? 'font-medium text-primary-500' : 'text-neutral-500'}`}>
                   {link.label}
                 </span>
               </div>
