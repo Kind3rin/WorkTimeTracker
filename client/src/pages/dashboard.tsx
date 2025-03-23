@@ -107,11 +107,11 @@ export default function Dashboard() {
     queryKey: isAdmin
       ? ["/api/admin/dashboard/expenses", { 
           startDate: monthStart.toISOString(), 
-          endDate: now.toISOString()
+          endDate: currentDate.toISOString()
         }]
       : ["/api/expenses/range", { 
           startDate: monthStart.toISOString(), 
-          endDate: now.toISOString(),
+          endDate: currentDate.toISOString(),
           companyId // Aggiunto per filtrare i dati per azienda specifica
         }],
     enabled: !!user,
@@ -224,7 +224,7 @@ export default function Dashboard() {
   // Filtro i time entries per il mese corrente e precedente
   const currentMonthTimeEntries = timeEntries.filter(entry => {
     const entryDate = new Date(entry.date);
-    return entryDate >= currentMonthStart && entryDate <= now;
+    return entryDate >= currentMonthStart && entryDate <= currentDate;
   });
   
   const previousMonthTimeEntries = timeEntries.filter(entry => {
@@ -244,7 +244,7 @@ export default function Dashboard() {
   // Filtro le spese per il mese corrente e precedente
   const currentMonthExpensesList = expenses.filter(expense => {
     const expenseDate = new Date(expense.date);
-    return expenseDate >= currentMonthStart && expenseDate <= now;
+    return expenseDate >= currentMonthStart && expenseDate <= currentDate;
   });
   
   const previousMonthExpensesList = expenses.filter(expense => {
@@ -274,7 +274,7 @@ export default function Dashboard() {
   
   // Find next business trip
   const upcomingTrips = trips
-    .filter(trip => new Date(trip.startDate) > now)
+    .filter(trip => new Date(trip.startDate) > currentDate)
     .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
   
   const nextTrip = upcomingTrips.length > 0 ? upcomingTrips[0] : null;
@@ -310,7 +310,7 @@ export default function Dashboard() {
       status: nextTrip.status === "approved" ? "confirmed" as const : "pending" as const,
     }] : []),
     ...leaveRequests
-      .filter(request => new Date(request.startDate) > now)
+      .filter(request => new Date(request.startDate) > currentDate)
       .map(request => ({
         id: request.id,
         date: request.startDate,
@@ -411,8 +411,8 @@ export default function Dashboard() {
   // Dati per il grafico dell'andamento mensile
   // Crea un array con tutti i giorni del mese
   const monthlyDaysRange = eachDayOfInterval({
-    start: startOfMonth(now),
-    end: now
+    start: startOfMonth(currentDate),
+    end: currentDate
   });
   
   // Inizializza i dati con zero ore per ogni giorno
@@ -460,7 +460,7 @@ export default function Dashboard() {
             <div className="mt-3 md:mt-0">
               <div className="bg-primary-50 text-primary-700 px-3 py-1.5 rounded-md text-sm font-medium inline-flex items-center">
                 <Calendar className="h-4 w-4 mr-1" />
-                {format(now, "d MMMM yyyy")}
+                {format(currentDate, "d MMMM yyyy")}
               </div>
             </div>
           </header>
