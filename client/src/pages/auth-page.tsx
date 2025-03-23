@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -111,82 +112,180 @@ export default function AuthPage() {
       {/* Form Section - Ottimizzato per Mobile */}
       <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-10">
         <div className="w-full max-w-md">
-          <div className="text-center mb-6 sm:mb-8">
-            <div className="flex justify-center mb-3 sm:mb-4">
-              <Calendar className="h-10 w-10 text-primary-500" />
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-neutral-800">WorkTracker Pro</h1>
-            <p className="mt-2 text-sm sm:text-base text-neutral-500">Gestione attività lavorative, diarie, trasferte e note spese</p>
-          </div>
+          <motion.div 
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-6 sm:mb-8"
+          >
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ 
+                delay: 0.3,
+                duration: 0.5,
+                type: "spring",
+                stiffness: 200
+              }}
+              className="flex justify-center mb-3 sm:mb-4"
+            >
+              <Calendar className="h-12 w-12 text-primary-500" />
+            </motion.div>
+            <motion.h1 
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+              className="text-2xl sm:text-3xl font-bold text-neutral-800"
+            >
+              WorkTracker Pro
+            </motion.h1>
+            <motion.p 
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+              className="mt-2 text-sm sm:text-base text-neutral-500"
+            >
+              Gestione attività lavorative, diarie, trasferte e note spese
+            </motion.p>
+          </motion.div>
 
-          <div className="w-full bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <h2 className="text-xl sm:text-2xl font-bold mb-6 text-center">Accedi</h2>
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ 
+              delay: 0.2,
+              duration: 0.6,
+              type: "spring",
+              stiffness: 100
+            }}
+            className="w-full bg-white p-6 md:p-8 rounded-xl shadow-md border border-gray-100 relative overflow-hidden"
+          >
+            <motion.div 
+              className="absolute -right-10 -top-10 w-40 h-40 bg-primary-50 rounded-full opacity-30"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 0.3 }}
+              transition={{ delay: 0.7, duration: 0.7 }}
+            />
+            <motion.div 
+              className="absolute -left-10 -bottom-10 w-40 h-40 bg-primary-50 rounded-full opacity-30"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 0.3 }}
+              transition={{ delay: 0.7, duration: 0.7 }}
+            />
+            
+            <motion.h2 
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.5 }}
+              className="text-xl sm:text-2xl font-bold mb-6 text-center relative z-10"
+            >
+              Accedi alla Piattaforma
+            </motion.h2>
+            
             <Form {...loginForm}>
-              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                <FormField
-                  control={loginForm.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Username</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          placeholder="Inserisci il tuo username"
-                          className="h-11" // Aumentato per il tocco mobile
-                          autoComplete="username"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={loginForm.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="password" 
-                          {...field} 
-                          placeholder="Inserisci la tua password"
-                          className="h-11" // Aumentato per il tocco mobile 
-                          autoComplete="current-password"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button 
-                  type="submit" 
-                  className="w-full h-11 text-base" // Aumentato per il tocco mobile
-                  disabled={loginMutation.isPending}
+              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5 relative z-10">
+                <motion.div
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.7, duration: 0.5 }}
                 >
-                  {loginMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Accesso in corso...
-                    </>
-                  ) : (
-                    "Accedi"
-                  )}
-                </Button>
+                  <FormField
+                    control={loginForm.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-neutral-700">Username</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder="Inserisci il tuo username"
+                            className="h-12 border-neutral-200 focus:border-primary-400 transition-colors"
+                            autoComplete="username"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </motion.div>
+                
+                <motion.div
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.8, duration: 0.5 }}
+                >
+                  <FormField
+                    control={loginForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-neutral-700">Password</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="password" 
+                            {...field} 
+                            placeholder="Inserisci la tua password"
+                            className="h-12 border-neutral-200 focus:border-primary-400 transition-colors"
+                            autoComplete="current-password"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </motion.div>
+                
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.9, duration: 0.5 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button 
+                    type="submit" 
+                    className="w-full h-12 text-base font-medium shadow-sm"
+                    disabled={loginMutation.isPending}
+                  >
+                    {loginMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Accesso in corso...
+                      </>
+                    ) : (
+                      "Accedi"
+                    )}
+                  </Button>
+                </motion.div>
               </form>
             </Form>
-            <p className="mt-4 text-sm text-center text-gray-500">
+            
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1, duration: 0.5 }}
+              className="mt-6 text-sm text-center text-gray-500 relative z-10"
+            >
               Per ottenere le credenziali di accesso, contatta l'amministratore del sistema.
-            </p>
-          </div>
+            </motion.p>
+          </motion.div>
         </div>
       </div>
       
       {/* Info Section with Image */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-primary-600 to-primary-400 text-white">
+      <motion.div 
+        initial={{ x: 100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.8, type: "spring", stiffness: 50 }}
+        className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-primary-600 to-primary-400 text-white"
+      >
         {/* SVG Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.1 }}
+          transition={{ delay: 0.4, duration: 1.5 }}
+          className="absolute inset-0"
+        >
           <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <pattern id="smallGrid" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -199,10 +298,15 @@ export default function AuthPage() {
             </defs>
             <rect width="100%" height="100%" fill="url(#grid)" />
           </svg>
-        </div>
+        </motion.div>
         
         {/* Calendar and Clock SVG Illustration */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-80">
+        <motion.div 
+          className="absolute inset-0 flex items-center justify-center opacity-80"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 0.8, scale: 1 }}
+          transition={{ delay: 0.5, duration: 1 }}
+        >
           <svg width="70%" height="70%" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
             {/* Calendar */}
             <rect x="150" y="100" width="400" height="350" rx="20" fill="white" />
@@ -280,15 +384,40 @@ export default function AuthPage() {
             <rect x="380" y="248" width="20" height="4" rx="2" fill="#f43f5e" />
             <rect x="380" y="256" width="20" height="4" rx="2" fill="#f43f5e" />
           </svg>
-        </div>
+        </motion.div>
         
         {/* Content Over Image */}
-        <div className="relative w-full p-10 flex flex-col justify-end z-10 bg-gradient-to-t from-primary-600 via-primary-600/70 to-transparent h-full">
-          <h2 className="text-3xl font-bold mb-6">Sistema di Gestione Attività Lavorative</h2>
-          <p className="mb-8">Gestisci facilmente tutti gli aspetti della tua attività lavorativa in un'unica piattaforma.</p>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8, duration: 0.8 }}
+          className="relative w-full p-10 flex flex-col justify-end z-10 bg-gradient-to-t from-primary-600 via-primary-600/70 to-transparent h-full"
+        >
+          <motion.h2 
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 1, duration: 0.5 }}
+            className="text-3xl font-bold mb-6"
+          >
+            Sistema di Gestione Attività Lavorative
+          </motion.h2>
+          
+          <motion.p 
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 1.1, duration: 0.5 }}
+            className="mb-8"
+          >
+            Gestisci facilmente tutti gli aspetti della tua attività lavorativa in un'unica piattaforma.
+          </motion.p>
           
           <div className="grid grid-cols-2 gap-6">
-            <div className="flex items-start">
+            <motion.div 
+              className="flex items-start"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 1.2, duration: 0.5 }}
+            >
               <div className="mr-4 mt-1 p-2 bg-white/20 rounded-full">
                 <Clock className="h-5 w-5" />
               </div>
@@ -296,9 +425,14 @@ export default function AuthPage() {
                 <h3 className="font-semibold text-lg">Consuntivi di Lavoro</h3>
                 <p className="text-primary-50 text-sm">Registra facilmente le ore di lavoro.</p>
               </div>
-            </div>
+            </motion.div>
             
-            <div className="flex items-start">
+            <motion.div 
+              className="flex items-start"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 1.3, duration: 0.5 }}
+            >
               <div className="mr-4 mt-1 p-2 bg-white/20 rounded-full">
                 <DollarSign className="h-5 w-5" />
               </div>
@@ -306,9 +440,14 @@ export default function AuthPage() {
                 <h3 className="font-semibold text-lg">Note Spese</h3>
                 <p className="text-primary-50 text-sm">Gestisci tutte le spese lavorative.</p>
               </div>
-            </div>
+            </motion.div>
             
-            <div className="flex items-start">
+            <motion.div 
+              className="flex items-start"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 1.4, duration: 0.5 }}
+            >
               <div className="mr-4 mt-1 p-2 bg-white/20 rounded-full">
                 <MapPin className="h-5 w-5" />
               </div>
@@ -316,9 +455,14 @@ export default function AuthPage() {
                 <h3 className="font-semibold text-lg">Trasferte</h3>
                 <p className="text-primary-50 text-sm">Pianifica e gestisci trasferte.</p>
               </div>
-            </div>
+            </motion.div>
             
-            <div className="flex items-start">
+            <motion.div 
+              className="flex items-start"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 1.5, duration: 0.5 }}
+            >
               <div className="mr-4 mt-1 p-2 bg-white/20 rounded-full">
                 <Calendar className="h-5 w-5" />
               </div>
@@ -326,10 +470,10 @@ export default function AuthPage() {
                 <h3 className="font-semibold text-lg">Ferie e Permessi</h3>
                 <p className="text-primary-50 text-sm">Gestisci ferie e malattie.</p>
               </div>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
