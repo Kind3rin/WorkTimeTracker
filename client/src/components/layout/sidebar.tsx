@@ -56,19 +56,31 @@ export default function Sidebar() {
     <>
       {/* Mobile Header */}
       {isMobile && (
-        <div className="lg:hidden bg-white shadow-sm py-2 px-4 flex items-center justify-between z-10">
+        <div className="fixed top-0 left-0 right-0 lg:hidden bg-white shadow-sm py-3 px-4 flex items-center justify-between z-20">
           <div className="flex items-center">
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => setIsOpen(!isOpen)}
-              className="text-neutral-800 focus:outline-none"
+              className="text-neutral-800 focus:outline-none -ml-2"
             >
               <Menu className="h-6 w-6" />
             </Button>
             <span className="ml-2 text-lg font-semibold text-primary-500">WorkTrack</span>
           </div>
-          <div>
+          <div className="flex items-center space-x-3">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="relative p-2 hover:bg-neutral-100 rounded-full"
+            >
+              <div className="relative">
+                <Calendar className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  3
+                </span>
+              </div>
+            </Button>
             <Avatar className="h-8 w-8 bg-primary-500 text-white">
               <AvatarFallback>{user ? getInitials(user.fullName || user.username) : "U"}</AvatarFallback>
             </Avatar>
@@ -79,14 +91,14 @@ export default function Sidebar() {
       {/* Sidebar Overlay */}
       {isMobile && isOpen && (
         <div 
-          className="fixed inset-0 bg-black/20 z-20" 
+          className="fixed inset-0 bg-black/40 z-30" 
           onClick={() => setIsOpen(false)}
         />
       )}
       
       {/* Sidebar */}
       <div 
-        className={`fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-lg transform transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-auto lg:h-screen ${
+        className={`fixed inset-y-0 left-0 z-40 w-[280px] bg-white shadow-xl transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-auto lg:h-screen ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -115,59 +127,59 @@ export default function Sidebar() {
               
               <nav className="mt-4 space-y-1">
                 <Link href="/" onClick={closeSidebar}>
-                  <div className={`flex items-center px-4 py-3 rounded-lg font-medium ${location === "/" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
+                  <div className={`flex items-center px-4 py-4 rounded-lg font-medium ${location === "/" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
                     <LayoutDashboard className={`h-5 w-5 mr-3 ${location === "/" ? "text-primary-500" : "text-neutral-500"}`} />
-                    Dashboard
+                    <span>Dashboard</span>
                   </div>
                 </Link>
                 
                 <Link href="/timesheet" onClick={closeSidebar}>
-                  <div className={`flex items-center px-4 py-3 rounded-lg font-medium ${location === "/timesheet" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
+                  <div className={`flex items-center px-4 py-4 rounded-lg font-medium ${location === "/timesheet" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
                     <Clock className={`h-5 w-5 mr-3 ${location === "/timesheet" ? "text-primary-500" : "text-neutral-500"}`} />
-                    Consuntivi
+                    <span>Consuntivi</span>
                   </div>
                 </Link>
                 
                 <Link href="/expenses" onClick={closeSidebar}>
-                  <div className={`flex items-center px-4 py-3 rounded-lg font-medium ${location === "/expenses" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
+                  <div className={`flex items-center px-4 py-4 rounded-lg font-medium ${location === "/expenses" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
                     <DollarSign className={`h-5 w-5 mr-3 ${location === "/expenses" ? "text-primary-500" : "text-neutral-500"}`} />
-                    Note Spese
+                    <span>Note Spese</span>
                   </div>
                 </Link>
                 
                 <Link href="/trips" onClick={closeSidebar}>
-                  <div className={`flex items-center px-4 py-3 rounded-lg font-medium ${location === "/trips" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
+                  <div className={`flex items-center px-4 py-4 rounded-lg font-medium ${location === "/trips" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
                     <MapPin className={`h-5 w-5 mr-3 ${location === "/trips" ? "text-primary-500" : "text-neutral-500"}`} />
-                    Trasferte
+                    <span>Trasferte</span>
                   </div>
                 </Link>
                 
                 <Link href="/timeoff" onClick={closeSidebar}>
-                  <div className={`flex items-center px-4 py-3 rounded-lg font-medium ${location === "/timeoff" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
+                  <div className={`flex items-center px-4 py-4 rounded-lg font-medium ${location === "/timeoff" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
                     <Calendar className={`h-5 w-5 mr-3 ${location === "/timeoff" ? "text-primary-500" : "text-neutral-500"}`} />
-                    Ferie e Permessi
+                    <span>Ferie e Permessi</span>
                   </div>
                 </Link>
                 
                 <Link href="/sickleave" onClick={closeSidebar}>
-                  <div className={`flex items-center px-4 py-3 rounded-lg font-medium ${location === "/sickleave" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
+                  <div className={`flex items-center px-4 py-4 rounded-lg font-medium ${location === "/sickleave" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
                     <Activity className={`h-5 w-5 mr-3 ${location === "/sickleave" ? "text-primary-500" : "text-neutral-500"}`} />
-                    Malattia
+                    <span>Malattia</span>
                   </div>
                 </Link>
                 
                 <Link href="/reports" onClick={closeSidebar}>
-                  <div className={`flex items-center px-4 py-3 rounded-lg font-medium ${location === "/reports" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
+                  <div className={`flex items-center px-4 py-4 rounded-lg font-medium ${location === "/reports" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
                     <BarChart className={`h-5 w-5 mr-3 ${location === "/reports" ? "text-primary-500" : "text-neutral-500"}`} />
-                    Report
+                    <span>Report</span>
                   </div>
                 </Link>
                 
                 {user?.role === "admin" && (
                   <Link href="/admin" onClick={closeSidebar}>
-                    <div className={`flex items-center px-4 py-3 rounded-lg font-medium ${location === "/admin" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
+                    <div className={`flex items-center px-4 py-4 rounded-lg font-medium ${location === "/admin" ? "text-primary-500 bg-primary-50" : "text-neutral-800 hover:bg-neutral-50"}`}>
                       <ShieldCheck className={`h-5 w-5 mr-3 ${location === "/admin" ? "text-primary-500" : "text-neutral-500"}`} />
-                      Amministrazione
+                      <span>Amministrazione</span>
                     </div>
                   </Link>
                 )}
@@ -177,18 +189,18 @@ export default function Sidebar() {
           
           <div className="p-4 border-t">
             <Link href="/settings" onClick={closeSidebar}>
-              <div className="flex items-center px-4 py-3 text-neutral-800 rounded-lg hover:bg-neutral-50">
+              <div className="flex items-center px-4 py-4 text-neutral-800 rounded-lg hover:bg-neutral-50">
                 <Settings className="h-5 w-5 mr-3 text-neutral-500" />
-                Impostazioni
+                <span>Impostazioni</span>
               </div>
             </Link>
             
             <div 
-              className="flex items-center px-4 py-3 text-neutral-800 rounded-lg hover:bg-neutral-50 cursor-pointer"
+              className="flex items-center px-4 py-4 text-neutral-800 rounded-lg hover:bg-neutral-50 cursor-pointer mt-1"
               onClick={handleLogout}
             >
               <LogOut className="h-5 w-5 mr-3 text-neutral-500" />
-              Logout
+              <span>Logout</span>
             </div>
           </div>
         </div>
