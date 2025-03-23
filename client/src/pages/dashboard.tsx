@@ -74,29 +74,41 @@ export default function Dashboard() {
   }
 
   // Set a realistic default for time entries to avoid loading states on empty data
+  // Recupera l'ID dell'azienda per filtrare i dati in base all'azienda
+  const companyId = localStorage.getItem('companyId') || 'default';
+  
+  // Fetch consuntivi con parametri specifici per azienda
   const defaultTimeEntries: TimeEntry[] = [];
   const { data: timeEntries = defaultTimeEntries, isLoading: isLoadingTimeEntries, error: timeEntriesError } = useQuery<TimeEntry[]>({
-    queryKey: ["/api/time-entries/range", { startDate: monthStart.toISOString(), endDate: now.toISOString() }],
+    queryKey: ["/api/time-entries/range", { 
+      startDate: monthStart.toISOString(), 
+      endDate: now.toISOString(),
+      companyId // Aggiunto per filtrare i dati per azienda specifica 
+    }],
     enabled: !!user,
     retry: 1, // Reduce retries for faster failure
     staleTime: 30000,
     refetchOnWindowFocus: false,
   });
   
-  // Fetch expenses for this month
+  // Fetch spese con parametri specifici per azienda
   const defaultExpenses: Expense[] = [];
   const { data: expenses = defaultExpenses, isLoading: isLoadingExpenses, error: expensesError } = useQuery<Expense[]>({
-    queryKey: ["/api/expenses/range", { startDate: monthStart.toISOString(), endDate: now.toISOString() }],
+    queryKey: ["/api/expenses/range", { 
+      startDate: monthStart.toISOString(), 
+      endDate: now.toISOString(),
+      companyId // Aggiunto per filtrare i dati per azienda specifica
+    }],
     enabled: !!user,
     retry: 1,
     staleTime: 30000,
     refetchOnWindowFocus: false,
   });
   
-  // Fetch leave requests for vacation data
+  // Fetch richieste ferie con parametri specifici per azienda
   const defaultLeaveRequests: LeaveRequest[] = [];
   const { data: leaveRequests = defaultLeaveRequests, isLoading: isLoadingLeave, error: leaveError } = useQuery<LeaveRequest[]>({
-    queryKey: ["/api/leave-requests"],
+    queryKey: ["/api/leave-requests", { companyId }], // Aggiunto per filtrare i dati per azienda specifica
     enabled: !!user,
     retry: 1,
     staleTime: 30000,

@@ -97,21 +97,32 @@ export default function AuthPage() {
 
 
 
+  // Per salvare l'ID dell'azienda nel localStorage quando l'utente accede
+  useEffect(() => {
+    // Recupera il parametro companyId dall'URL se presente
+    const params = new URLSearchParams(window.location.search);
+    const companyId = params.get('companyId');
+    
+    if (companyId) {
+      localStorage.setItem('companyId', companyId);
+    }
+  }, []);
+  
   return (
     <div className="min-h-screen bg-neutral-50 flex flex-col lg:flex-row">
-      {/* Form Section */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-10">
+      {/* Form Section - Ottimizzato per Mobile */}
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-10">
         <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="flex justify-center mb-3 sm:mb-4">
               <Calendar className="h-10 w-10 text-primary-500" />
             </div>
-            <h1 className="text-3xl font-bold text-neutral-800">WorkTrack</h1>
-            <p className="mt-2 text-neutral-500">Gestione attività lavorative, diarie, trasferte e note spese</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-neutral-800">WorkTracker Pro</h1>
+            <p className="mt-2 text-sm sm:text-base text-neutral-500">Gestione attività lavorative, diarie, trasferte e note spese</p>
           </div>
 
-          <div className="w-full">
-            <h2 className="text-2xl font-bold mb-6 text-center">Accedi</h2>
+          <div className="w-full bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h2 className="text-xl sm:text-2xl font-bold mb-6 text-center">Accedi</h2>
             <Form {...loginForm}>
               <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                 <FormField
@@ -121,7 +132,12 @@ export default function AuthPage() {
                     <FormItem>
                       <FormLabel>Username</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Inserisci il tuo username" />
+                        <Input 
+                          {...field} 
+                          placeholder="Inserisci il tuo username"
+                          className="h-11" // Aumentato per il tocco mobile
+                          autoComplete="username"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -134,7 +150,13 @@ export default function AuthPage() {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input type="password" {...field} placeholder="Inserisci la tua password" />
+                        <Input 
+                          type="password" 
+                          {...field} 
+                          placeholder="Inserisci la tua password"
+                          className="h-11" // Aumentato per il tocco mobile 
+                          autoComplete="current-password"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -142,12 +164,12 @@ export default function AuthPage() {
                 />
                 <Button 
                   type="submit" 
-                  className="w-full" 
+                  className="w-full h-11 text-base" // Aumentato per il tocco mobile
                   disabled={loginMutation.isPending}
                 >
                   {loginMutation.isPending ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                       Accesso in corso...
                     </>
                   ) : (

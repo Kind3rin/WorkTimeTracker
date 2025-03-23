@@ -54,7 +54,7 @@ export default function ActivityTable({
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden h-full">
-      <div className="px-3 sm:px-6 py-3 sm:py-4 border-b flex justify-between items-center">
+      <div className="sticky top-0 z-10 bg-white px-3 sm:px-6 py-3 sm:py-4 border-b flex justify-between items-center">
         <h2 className="text-base sm:text-lg font-medium">{caption}</h2>
         {showViewAll && (
           <Button 
@@ -69,24 +69,32 @@ export default function ActivityTable({
         )}
       </div>
       
-      {/* Mobile View - Card Layout */}
-      <div className="block md:hidden">
+      {/* Mobile View - Card Layout - Ottimizzato per touch */}
+      <div className="block md:hidden overflow-auto">
         {displayActivities.length > 0 ? (
           <div className="divide-y">
             {displayActivities.map((activity) => (
-              <div key={activity.id} className="p-3 hover:bg-neutral-50 transition-colors">
-                <div className="flex justify-between mb-1">
+              <div 
+                key={activity.id} 
+                className="p-4 hover:bg-neutral-50 active:bg-neutral-100 transition-colors"
+                role="button"
+                tabIndex={0}
+                aria-label={`Attività: ${activity.activity}`}
+              >
+                <div className="flex justify-between mb-2">
                   <span className="text-xs font-medium text-neutral-500">{formatDate(activity.date)}</span>
-                  <span className="text-xs font-medium">{activity.hours} ore</span>
+                  <span className="text-xs font-semibold bg-neutral-100 px-2 py-0.5 rounded-full">{activity.hours} ore</span>
                 </div>
-                <p className="text-sm font-medium mb-2 line-clamp-2">{activity.activity}</p>
+                <p className="text-sm font-medium mb-3 line-clamp-2">{activity.activity}</p>
                 <div>{getStatusBadge(activity.status)}</div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="p-4 text-center text-neutral-500 text-sm">
-            Nessuna attività registrata
+          <div className="flex flex-col items-center justify-center p-8 text-center text-neutral-500 text-sm">
+            <div className="mb-2">📅</div>
+            <p>Nessuna attività registrata</p>
+            <p className="text-xs mt-1">Le attività appariranno qui una volta inserite</p>
           </div>
         )}
       </div>
