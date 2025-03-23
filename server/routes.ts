@@ -30,6 +30,18 @@ const isAdmin = (req: Request, res: Response, next: NextFunction) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Middleware per disabilitare la cache per tutte le richieste API
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    // Disabilita la cache solo per le richieste API
+    if (req.path.startsWith('/api/')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.setHeader('Surrogate-Control', 'no-store');
+    }
+    next();
+  });
+  
   // Set up authentication routes
   setupAuth(app);
   
