@@ -41,13 +41,13 @@ export default function QuickEntryForm() {
   const { user } = useAuth();
 
   // Fetch activity types
-  const { data: activityTypes = [] } = useQuery({
+  const { data: activityTypes = [] } = useQuery<any[]>({
     queryKey: ["/api/activity-types"],
     staleTime: Infinity,
   });
 
   // Fetch projects
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [] } = useQuery<any[]>({
     queryKey: ["/api/projects"],
     staleTime: Infinity,
   });
@@ -75,7 +75,9 @@ export default function QuickEntryForm() {
         title: "Attività registrata",
         description: "L'attività è stata registrata con successo.",
       });
+      // Invalida tutte le query correlate
       queryClient.invalidateQueries({ queryKey: ["/api/time-entries"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/time-entries/range"] });
       form.reset({
         date: new Date().toISOString().split("T")[0],
         activityTypeId: "",
@@ -151,7 +153,7 @@ export default function QuickEntryForm() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {activityTypes.filter(type => type.category === 'work').map(type => (
+                      {activityTypes.filter((type: {category: string}) => type.category === 'work').map((type: {id: number, name: string}) => (
                         <SelectItem key={type.id} value={type.id.toString()} className="text-xs sm:text-sm">
                           {type.name}
                         </SelectItem>
@@ -176,7 +178,7 @@ export default function QuickEntryForm() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {projects.map(project => (
+                      {projects.map((project: {id: number, name: string}) => (
                         <SelectItem key={project.id} value={project.id.toString()} className="text-xs sm:text-sm">
                           {project.name}
                         </SelectItem>

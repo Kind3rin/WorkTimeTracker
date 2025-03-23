@@ -80,7 +80,7 @@ export default function Dashboard() {
   
   // Fetch consuntivi con parametri specifici per azienda
   const defaultTimeEntries: TimeEntry[] = [];
-  const { data: timeEntries = defaultTimeEntries, isLoading: isLoadingTimeEntries, error: timeEntriesError } = useQuery<TimeEntry[]>({
+  const { data: timeEntries = defaultTimeEntries, isLoading: isLoadingTimeEntries, error: timeEntriesError, refetch: refetchTimeEntries } = useQuery<TimeEntry[]>({
     queryKey: ["/api/time-entries/range", { 
       startDate: monthStart.toISOString(), 
       endDate: now.toISOString(),
@@ -88,13 +88,14 @@ export default function Dashboard() {
     }],
     enabled: !!user,
     retry: 1, // Reduce retries for faster failure
-    staleTime: 30000,
-    refetchOnWindowFocus: false,
+    staleTime: 0, // Forza un rinnovo dei dati a ogni caricamento
+    refetchOnWindowFocus: true, // Ricarica i dati quando la finestra recupera il focus
+    refetchInterval: 60000, // Ricarica i dati ogni minuto
   });
   
   // Fetch spese con parametri specifici per azienda
   const defaultExpenses: Expense[] = [];
-  const { data: expenses = defaultExpenses, isLoading: isLoadingExpenses, error: expensesError } = useQuery<Expense[]>({
+  const { data: expenses = defaultExpenses, isLoading: isLoadingExpenses, error: expensesError, refetch: refetchExpenses } = useQuery<Expense[]>({
     queryKey: ["/api/expenses/range", { 
       startDate: monthStart.toISOString(), 
       endDate: now.toISOString(),
@@ -102,28 +103,31 @@ export default function Dashboard() {
     }],
     enabled: !!user,
     retry: 1,
-    staleTime: 30000,
-    refetchOnWindowFocus: false,
+    staleTime: 0, // Forza un rinnovo dei dati a ogni caricamento
+    refetchOnWindowFocus: true, // Ricarica i dati quando la finestra recupera il focus
+    refetchInterval: 60000, // Ricarica i dati ogni minuto
   });
   
   // Fetch richieste ferie con parametri specifici per azienda
   const defaultLeaveRequests: LeaveRequest[] = [];
-  const { data: leaveRequests = defaultLeaveRequests, isLoading: isLoadingLeave, error: leaveError } = useQuery<LeaveRequest[]>({
+  const { data: leaveRequests = defaultLeaveRequests, isLoading: isLoadingLeave, error: leaveError, refetch: refetchLeaveRequests } = useQuery<LeaveRequest[]>({
     queryKey: ["/api/leave-requests", { companyId }], // Aggiunto per filtrare i dati per azienda specifica
     enabled: !!user,
     retry: 1,
-    staleTime: 30000,
-    refetchOnWindowFocus: false,
+    staleTime: 0, // Forza un rinnovo dei dati a ogni caricamento
+    refetchOnWindowFocus: true, // Ricarica i dati quando la finestra recupera il focus
+    refetchInterval: 60000, // Ricarica i dati ogni minuto
   });
   
   // Fetch trasferte con parametri specifici per azienda
   const defaultTrips: Trip[] = [];
-  const { data: trips = defaultTrips, isLoading: isLoadingTrips, error: tripsError } = useQuery<Trip[]>({
+  const { data: trips = defaultTrips, isLoading: isLoadingTrips, error: tripsError, refetch: refetchTrips } = useQuery<Trip[]>({
     queryKey: ["/api/trips", { companyId }], // Aggiunto per filtrare i dati per azienda specifica
     enabled: !!user,
     retry: 1,
-    staleTime: 30000,
-    refetchOnWindowFocus: false,
+    staleTime: 0, // Forza un rinnovo dei dati a ogni caricamento
+    refetchOnWindowFocus: true, // Ricarica i dati quando la finestra recupera il focus
+    refetchInterval: 60000, // Ricarica i dati ogni minuto
   });
   
   // Debug info to help diagnose loading issues
