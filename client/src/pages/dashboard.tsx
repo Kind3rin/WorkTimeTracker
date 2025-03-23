@@ -29,12 +29,12 @@ export default function Dashboard() {
   const [, navigate] = useLocation();
   
   // Fetch time entries for this month
-  const now = new Date();
-  const monthStart = startOfMonth(now);
+  const currentDate = new Date();
+  const monthStart = startOfMonth(currentDate);
   
   // Fetch weekly time entries
-  const weekStart = startOfWeek(now, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
+  const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
   
   console.log("Dashboard - Start fetching data, user:", user?.id);
   
@@ -87,11 +87,11 @@ export default function Dashboard() {
     queryKey: isAdmin 
       ? ["/api/admin/dashboard/time-entries", { 
           startDate: monthStart.toISOString(), 
-          endDate: now.toISOString()
+          endDate: currentDate.toISOString()
         }]
       : ["/api/time-entries/range", { 
           startDate: monthStart.toISOString(), 
-          endDate: now.toISOString(),
+          endDate: currentDate.toISOString(),
           companyId // Aggiunto per filtrare i dati per azienda specifica 
         }],
     enabled: !!user,
@@ -191,43 +191,11 @@ export default function Dashboard() {
   // Calculate total weekly hours
   const totalWeeklyHours = weeklyTimeData.reduce((sum, day) => sum + day.hours, 0);
   
-  // Definisci l'interfaccia per la configurazione utente
-  interface UserConfig {
-    totalVacationDays: number;
-    totalLeaveHours: number;
-    fiscalYearEnd: string;
-  }
-  
-  // Definisci l'interfaccia per le statistiche mensili
-  interface MonthStats {
-    currentMonthHours: number;
-    previousMonthHours: number;
-    hoursPercentChange: number;
-    currentMonthExpenseTotal: number;
-    previousMonthExpenseTotal: number;
-    expensesPercentChange: number;
-  }
-
-  // Ottieni configurazioni utente (ferie, permessi, ecc.)
-  const { data: userConfig, isLoading: isLoadingUserConfig } = useQuery<UserConfig>({
-    queryKey: ["/api/user/config"],
-    enabled: !!user,
-    staleTime: 0,
-    refetchOnWindowFocus: true
-  });
-
-  // Ottieni statistiche mensili con variazioni
-  const { data: monthStats, isLoading: isLoadingMonthStats } = useQuery<MonthStats>({
-    queryKey: ["/api/user/month-stats"],
-    enabled: !!user,
-    staleTime: 0,
-    refetchOnWindowFocus: true
-  });
-  
-  // Valori di default per configurazioni utente
-  const totalVacationDays = userConfig?.totalVacationDays || 25;
-  const totalLeaveHours = userConfig?.totalLeaveHours || 40;
-  const fiscalYearEnd = userConfig?.fiscalYearEnd || "31/12/2025";
+  // Configurazioni delle ferie e permessi
+  // In un sistema completo, questo dovrebbe venire da un API di configurazione utente
+  const totalVacationDays = user?.role === 'admin' ? 30 : 25; // Gli admin hanno più giorni di ferie
+  const totalLeaveHours = user?.role === 'admin' ? 48 : 40;   // Gli admin hanno più ore di permesso
+  const fiscalYearEnd = "31/12/2025";
   
   // Calcolo delle ferie utilizzate in giorni
   const usedVacationDays = leaveRequests
@@ -248,9 +216,61 @@ export default function Dashboard() {
   const remainingVacationDays = totalVacationDays - usedVacationDays;
   const remainingLeaveHours = totalLeaveHours - usedLeaveHours;
   
-  // Variazione percentuale ore e spese rispetto al mese precedente
-  const hoursPercentChange = monthStats?.hoursPercentChange || 0;
-  const expensesPercentChange = monthStats?.expensesPercentChange || 0;
+  // Calcolo dati mese precedente per confronto
+  const currentMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+  const previousMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+  const previousMonthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0);
+  
+  // Filtro i time entries per il mese corrente e precedente
+  const currentMonthTimeEntries = timeEntries.filter(entry => {
+    const entryDate = new Date(entry.date);
+    return entryDate >= currentMonthStart && entryDate <= now;
+  });
+  
+  const previousMonthTimeEntries = timeEntries.filter(entry => {
+    const entryDate = new Date(entry.date);
+    return entryDate >= previousMonthStart && entryDate <= previousMonthEnd;
+  });
+  
+  // Calcolo ore totali per mese corrente e precedente
+  const currentMonthHours = currentMonthTimeEntries.reduce(
+    (sum, entry) => sum + Number(entry.hours), 0
+  );
+  
+  const previousMonthHours = previousMonthTimeEntries.reduce(
+    (sum, entry) => sum + Number(entry.hours), 0
+  );
+  
+  // Filtro le spese per il mese corrente e precedente
+  const currentMonthExpensesList = expenses.filter(expense => {
+    const expenseDate = new Date(expense.date);
+    return expenseDate >= currentMonthStart && expenseDate <= now;
+  });
+  
+  const previousMonthExpensesList = expenses.filter(expense => {
+    const expenseDate = new Date(expense.date);
+    return expenseDate >= previousMonthStart && expenseDate <= previousMonthEnd;
+  });
+  
+  // Calcolo spese totali per mese corrente e precedente
+  const currentMonthExpenses = currentMonthExpensesList.reduce(
+    (sum, expense) => sum + Number(expense.amount), 0
+  );
+  
+  const previousMonthExpenses = previousMonthExpensesList.reduce(
+    (sum, expense) => sum + Number(expense.amount), 0
+  );
+  
+  // Calcolo variazione percentuale
+  let hoursPercentChange = 0;
+  if (previousMonthHours > 0) {
+    hoursPercentChange = ((currentMonthHours - previousMonthHours) / previousMonthHours) * 100;
+  }
+  
+  let expensesPercentChange = 0;
+  if (previousMonthExpenses > 0) {
+    expensesPercentChange = ((currentMonthExpenses - previousMonthExpenses) / previousMonthExpenses) * 100;
+  }
   
   // Find next business trip
   const upcomingTrips = trips
