@@ -94,7 +94,15 @@ export default function AdminPage() {
   const approveMutation = useMutation({
     mutationFn: async ({ id, type }: { id: number, type: string }) => {
       const res = await apiRequest("PATCH", `/api/admin/${type}/${id}/approve`);
-      return await res.json();
+      // Gestione di risposte che potrebbero non essere in formato JSON valido
+      if (res.status === 204) return null; // No content
+      const text = await res.text();
+      try {
+        return text ? JSON.parse(text) : null;
+      } catch (e) {
+        console.error("Errore nel parsing della risposta:", text);
+        return null;
+      }
     },
     onSuccess: () => {
       toast({
@@ -117,7 +125,15 @@ export default function AdminPage() {
   const rejectMutation = useMutation({
     mutationFn: async ({ id, type }: { id: number, type: string }) => {
       const res = await apiRequest("PATCH", `/api/admin/${type}/${id}/reject`);
-      return await res.json();
+      // Gestione di risposte che potrebbero non essere in formato JSON valido
+      if (res.status === 204) return null; // No content
+      const text = await res.text();
+      try {
+        return text ? JSON.parse(text) : null;
+      } catch (e) {
+        console.error("Errore nel parsing della risposta:", text);
+        return null;
+      }
     },
     onSuccess: () => {
       toast({
