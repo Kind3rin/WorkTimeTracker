@@ -79,6 +79,8 @@ export default function Dashboard() {
     queryKey: ["/api/time-entries/range", { startDate: monthStart.toISOString(), endDate: now.toISOString() }],
     enabled: !!user,
     retry: 1, // Reduce retries for faster failure
+    staleTime: 30000,
+    refetchOnWindowFocus: false,
   });
   
   // Fetch expenses for this month
@@ -87,6 +89,8 @@ export default function Dashboard() {
     queryKey: ["/api/expenses/range", { startDate: monthStart.toISOString(), endDate: now.toISOString() }],
     enabled: !!user,
     retry: 1,
+    staleTime: 30000,
+    refetchOnWindowFocus: false,
   });
   
   // Fetch leave requests for vacation data
@@ -95,6 +99,8 @@ export default function Dashboard() {
     queryKey: ["/api/leave-requests"],
     enabled: !!user,
     retry: 1,
+    staleTime: 30000,
+    refetchOnWindowFocus: false,
   });
   
   // Fetch upcoming trips
@@ -103,6 +109,8 @@ export default function Dashboard() {
     queryKey: ["/api/trips"],
     enabled: !!user,
     retry: 1,
+    staleTime: 30000,
+    refetchOnWindowFocus: false,
   });
   
   // Debug info to help diagnose loading issues
@@ -235,7 +243,7 @@ export default function Dashboard() {
   
   const isLoading = isLoadingTimeEntries || isLoadingExpenses || isLoadingLeave || isLoadingTrips;
   
-  // Imposta un timeout di 10 secondi per evitare il caricamento infinito
+  // Imposta un timeout di 5 secondi per evitare il caricamento infinito
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   
   useEffect(() => {
@@ -244,10 +252,23 @@ export default function Dashboard() {
         console.log("Timeout del caricamento della dashboard attivato");
         setLoadingTimeout(true);
       }
-    }, 10000);
+    }, 5000);
     
     return () => clearTimeout(timer);
   }, [isLoading]);
+  
+  // Forza il rendering anche in caso di errori nel caricamento dati
+  useEffect(() => {
+    if (timeEntriesError || expensesError || leaveError || tripsError) {
+      console.error("Errori nel caricamento dei dati:", {
+        timeEntriesError,
+        expensesError,
+        leaveError,
+        tripsError
+      });
+      setLoadingTimeout(true);
+    }
+  }, [timeEntriesError, expensesError, leaveError, tripsError]);
   
   if (isLoading && !loadingTimeout) {
     return (
