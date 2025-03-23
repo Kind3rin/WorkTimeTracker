@@ -46,6 +46,17 @@ export default function AuthPage() {
   const { user, isLoading, loginMutation, registerMutation } = useAuth();
   const [activeTab, setActiveTab] = useState<string>("login");
   
+  // Per salvare l'ID dell'azienda nel localStorage quando l'utente accede (HOOK DEVE ESSERE PRIMA DEI RETURN STATEMENTS)
+  useEffect(() => {
+    // Recupera il parametro companyId dall'URL se presente
+    const params = new URLSearchParams(window.location.search);
+    const companyId = params.get('companyId');
+    
+    if (companyId) {
+      localStorage.setItem('companyId', companyId);
+    }
+  }, []);
+  
   // Login form
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -94,19 +105,6 @@ export default function AuthPage() {
       role: "employee"
     });
   }
-
-
-
-  // Per salvare l'ID dell'azienda nel localStorage quando l'utente accede
-  useEffect(() => {
-    // Recupera il parametro companyId dall'URL se presente
-    const params = new URLSearchParams(window.location.search);
-    const companyId = params.get('companyId');
-    
-    if (companyId) {
-      localStorage.setItem('companyId', companyId);
-    }
-  }, []);
   
   return (
     <div className="min-h-screen bg-neutral-50 flex flex-col lg:flex-row">
