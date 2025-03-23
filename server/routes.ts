@@ -666,6 +666,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: `Errore durante il recupero dei dati di tipo ${req.params.type}` });
     }
   });
+  
+  // API per ottenere tutti i time entries per la dashboard (solo admin)
+  app.get("/api/admin/dashboard/time-entries", isAdmin, async (req, res) => {
+    try {
+      // Recupera tutti gli utenti
+      const users = await storage.getAllUsers();
+      let allTimeEntries: any[] = [];
+      
+      // Per ogni utente, recupera i suoi time entries
+      for (const user of users) {
+        const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(0);
+        const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
+        const userTimeEntries = await storage.getTimeEntriesByUserAndDateRange(user.id, startDate, endDate);
+        allTimeEntries = [...allTimeEntries, ...userTimeEntries];
+      }
+      
+      res.json(allTimeEntries);
+    } catch (error) {
+      console.error("Error getting all time entries:", error);
+      res.status(500).json({ error: "Errore durante il recupero di tutti i time entries" });
+    }
+  });
+  
+  // API per ottenere tutte le spese per la dashboard (solo admin)
+  app.get("/api/admin/dashboard/expenses", isAdmin, async (req, res) => {
+    try {
+      // Recupera tutti gli utenti
+      const users = await storage.getAllUsers();
+      let allExpenses: any[] = [];
+      
+      // Per ogni utente, recupera le sue spese
+      for (const user of users) {
+        const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(0);
+        const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
+        const userExpenses = await storage.getExpensesByUserAndDateRange(user.id, startDate, endDate);
+        allExpenses = [...allExpenses, ...userExpenses];
+      }
+      
+      res.json(allExpenses);
+    } catch (error) {
+      console.error("Error getting all expenses:", error);
+      res.status(500).json({ error: "Errore durante il recupero di tutte le spese" });
+    }
+  });
+  
+  // API per ottenere tutte le richieste di permesso per la dashboard (solo admin)
+  app.get("/api/admin/dashboard/leave-requests", isAdmin, async (req, res) => {
+    try {
+      // Recupera tutti gli utenti
+      const users = await storage.getAllUsers();
+      let allLeaveRequests: any[] = [];
+      
+      // Per ogni utente, recupera le sue richieste di permesso
+      for (const user of users) {
+        const leaveRequests = await storage.getLeaveRequestsByUser(user.id);
+        allLeaveRequests = [...allLeaveRequests, ...leaveRequests];
+      }
+      
+      res.json(allLeaveRequests);
+    } catch (error) {
+      console.error("Error getting all leave requests:", error);
+      res.status(500).json({ error: "Errore durante il recupero di tutte le richieste di permesso" });
+    }
+  });
+  
+  // API per ottenere tutte le trasferte per la dashboard (solo admin)
+  app.get("/api/admin/dashboard/trips", isAdmin, async (req, res) => {
+    try {
+      // Recupera tutti gli utenti
+      const users = await storage.getAllUsers();
+      let allTrips: any[] = [];
+      
+      // Per ogni utente, recupera le sue trasferte
+      for (const user of users) {
+        const trips = await storage.getTripsByUser(user.id);
+        allTrips = [...allTrips, ...trips];
+      }
+      
+      res.json(allTrips);
+    } catch (error) {
+      console.error("Error getting all trips:", error);
+      res.status(500).json({ error: "Errore durante il recupero di tutte le trasferte" });
+    }
+  });
 
   // API per ottenere tutte le richieste di permesso in pending (solo admin)
   app.get("/api/admin/leave-requests/pending", isAdmin, async (req, res) => {

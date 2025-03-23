@@ -78,14 +78,22 @@ export default function Dashboard() {
   // Recupera l'ID dell'azienda per filtrare i dati in base all'azienda
   const companyId = localStorage.getItem('companyId') || 'default';
   
-  // Fetch consuntivi con parametri specifici per azienda
+  // Determina se l'utente è un amministratore
+  const isAdmin = user?.role === 'admin';
+  
+  // Fetch consuntivi con parametri specifici per azienda o tutti i consuntivi se admin
   const defaultTimeEntries: TimeEntry[] = [];
   const { data: timeEntries = defaultTimeEntries, isLoading: isLoadingTimeEntries, error: timeEntriesError, refetch: refetchTimeEntries } = useQuery<TimeEntry[]>({
-    queryKey: ["/api/time-entries/range", { 
-      startDate: monthStart.toISOString(), 
-      endDate: now.toISOString(),
-      companyId // Aggiunto per filtrare i dati per azienda specifica 
-    }],
+    queryKey: isAdmin 
+      ? ["/api/admin/dashboard/time-entries", { 
+          startDate: monthStart.toISOString(), 
+          endDate: now.toISOString()
+        }]
+      : ["/api/time-entries/range", { 
+          startDate: monthStart.toISOString(), 
+          endDate: now.toISOString(),
+          companyId // Aggiunto per filtrare i dati per azienda specifica 
+        }],
     enabled: !!user,
     retry: 1, // Reduce retries for faster failure
     staleTime: 0, // Forza un rinnovo dei dati a ogni caricamento
@@ -93,14 +101,19 @@ export default function Dashboard() {
     refetchInterval: 60000, // Ricarica i dati ogni minuto
   });
   
-  // Fetch spese con parametri specifici per azienda
+  // Fetch spese con parametri specifici per azienda o tutte le spese se admin
   const defaultExpenses: Expense[] = [];
   const { data: expenses = defaultExpenses, isLoading: isLoadingExpenses, error: expensesError, refetch: refetchExpenses } = useQuery<Expense[]>({
-    queryKey: ["/api/expenses/range", { 
-      startDate: monthStart.toISOString(), 
-      endDate: now.toISOString(),
-      companyId // Aggiunto per filtrare i dati per azienda specifica
-    }],
+    queryKey: isAdmin
+      ? ["/api/admin/dashboard/expenses", { 
+          startDate: monthStart.toISOString(), 
+          endDate: now.toISOString()
+        }]
+      : ["/api/expenses/range", { 
+          startDate: monthStart.toISOString(), 
+          endDate: now.toISOString(),
+          companyId // Aggiunto per filtrare i dati per azienda specifica
+        }],
     enabled: !!user,
     retry: 1,
     staleTime: 0, // Forza un rinnovo dei dati a ogni caricamento
@@ -108,10 +121,12 @@ export default function Dashboard() {
     refetchInterval: 60000, // Ricarica i dati ogni minuto
   });
   
-  // Fetch richieste ferie con parametri specifici per azienda
+  // Fetch richieste ferie con parametri specifici per azienda o tutte le richieste se admin
   const defaultLeaveRequests: LeaveRequest[] = [];
   const { data: leaveRequests = defaultLeaveRequests, isLoading: isLoadingLeave, error: leaveError, refetch: refetchLeaveRequests } = useQuery<LeaveRequest[]>({
-    queryKey: ["/api/leave-requests", { companyId }], // Aggiunto per filtrare i dati per azienda specifica
+    queryKey: isAdmin
+      ? ["/api/admin/dashboard/leave-requests"]
+      : ["/api/leave-requests", { companyId }],
     enabled: !!user,
     retry: 1,
     staleTime: 0, // Forza un rinnovo dei dati a ogni caricamento
@@ -119,10 +134,12 @@ export default function Dashboard() {
     refetchInterval: 60000, // Ricarica i dati ogni minuto
   });
   
-  // Fetch trasferte con parametri specifici per azienda
+  // Fetch trasferte con parametri specifici per azienda o tutte le trasferte se admin
   const defaultTrips: Trip[] = [];
   const { data: trips = defaultTrips, isLoading: isLoadingTrips, error: tripsError, refetch: refetchTrips } = useQuery<Trip[]>({
-    queryKey: ["/api/trips", { companyId }], // Aggiunto per filtrare i dati per azienda specifica
+    queryKey: isAdmin
+      ? ["/api/admin/dashboard/trips"]
+      : ["/api/trips", { companyId }],
     enabled: !!user,
     retry: 1,
     staleTime: 0, // Forza un rinnovo dei dati a ogni caricamento
