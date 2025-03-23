@@ -19,6 +19,7 @@ import ActivityDistributionChart from "@/components/dashboard/activity-distribut
 import MonthlyTrendChart from "@/components/dashboard/monthly-trend-chart";
 import UpcomingEvents from "@/components/dashboard/upcoming-events";
 import { addDays, format, parseISO, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, differenceInDays, subDays } from "date-fns";
+import { it } from 'date-fns/locale';
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
@@ -115,10 +116,10 @@ export default function Dashboard() {
     refetchOnWindowFocus: false,
   });
   
-  // Fetch upcoming trips
+  // Fetch trasferte con parametri specifici per azienda
   const defaultTrips: Trip[] = [];
   const { data: trips = defaultTrips, isLoading: isLoadingTrips, error: tripsError } = useQuery<Trip[]>({
-    queryKey: ["/api/trips"],
+    queryKey: ["/api/trips", { companyId }], // Aggiunto per filtrare i dati per azienda specifica
     enabled: !!user,
     retry: 1,
     staleTime: 30000,
@@ -368,9 +369,23 @@ export default function Dashboard() {
       
       <div className="lg:ml-64 flex-1 min-h-screen overflow-y-auto">
         <div className="p-3 sm:p-4 md:p-6">
-          <header className="mb-4 md:mb-6 lg:mb-8">
-            <h1 className="text-xl md:text-2xl font-semibold text-neutral-800">Dashboard</h1>
-            <p className="text-sm md:text-base text-neutral-500">Benvenuto nel tuo pannello di controllo delle attività lavorative</p>
+          <header className="mb-4 md:mb-6 lg:mb-8 flex flex-col md:flex-row justify-between items-start md:items-center">
+            <div>
+              <h1 className="text-xl md:text-2xl font-semibold text-neutral-800">Dashboard</h1>
+              <p className="text-sm md:text-base text-neutral-500">
+                {companyId && companyId !== 'default' ? (
+                  `Dashboard ${companyId}`
+                ) : (
+                  "Benvenuto nel tuo pannello di controllo delle attività lavorative"
+                )}
+              </p>
+            </div>
+            <div className="mt-3 md:mt-0">
+              <div className="bg-primary-50 text-primary-700 px-3 py-1.5 rounded-md text-sm font-medium inline-flex items-center">
+                <Calendar className="h-4 w-4 mr-1" />
+                {format(now, "d MMMM yyyy")}
+              </div>
+            </div>
           </header>
           
           {/* Summary Cards */}
