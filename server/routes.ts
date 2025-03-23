@@ -85,6 +85,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // API per ottenere l'utente attualmente autenticato
+  app.get("/api/user", (req, res) => {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ error: "Non autenticato" });
+    }
+    
+    // Rimuovi la password e altri dati sensibili
+    const { password, ...user } = req.user;
+    
+    res.json(user);
+  });
+  
+  // API per ottenere le configurazioni dell'utente (ferie, permessi, ecc.)
+  app.get("/api/user/config", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ error: "Non autenticato" });
+    }
+    
+    const user = req.user;
+    
+    // Questi valori dovrebbero provenire dalle configurazioni dell'utente in un database reale
+    // Per ora, utilizziamo valori standard basati sul ruolo dell'utente
+    const userConfig = {
+      totalVacationDays: user.role === 'admin' ? 30 : 25, // Gli admin hanno più giorni di ferie
+      totalLeaveHours: user.role === 'admin' ? 48 : 40,   // Gli admin hanno più ore di permesso
+      fiscalYearEnd: "31/12/2025",                        // Data di scadenza delle ferie
+    };
+    
+    res.json(userConfig);
+  });
+  
+  // API per ottenere le statistiche mensili dell'utente con variazione rispetto al mese precedente
+  app.get("/api/user/month-stats", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ error: "Non autenticato" });
+    }
+    
+    const user = req.user;
+    
+    // Calcola l'inizio del mese corrente e del mese precedente
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+    
+    try {
+      // Ottieni le ore registrate nel mese corrente
+      const currentMonthEntries = await storage.getTimeEntriesByUserAndDateRange(
+        user.id,
+        currentMonthStart,
+        now
+      );
+      
+      const currentMonthHours = currentMonthEntries.reduce(
+        (sum, entry) => sum + Number(entry.hours),
+        0
+      );
+      
+      // Ottieni le ore registrate nel mese precedente
+      const previousMonthEntries = await storage.getTimeEntriesByUserAndDateRange(
+        user.id,
+        previousMonthStart,
+        previousMonthEnd
+      );
+      
+      const previousMonthHours = previousMonthEntries.reduce(
+        (sum, entry) => sum + Number(entry.hours),
+        0
+      );
+      
+      // Calcola la variazione percentuale per le ore
+      let hoursPercentChange = 0;
+      if (previousMonthHours > 0) {
+        hoursPercentChange = ((currentMonthHours - previousMonthHours) / previousMonthHours) * 100;
+      }
+      
+      // Ottieni le spese nel mese corrente
+      const currentMonthExpenses = await storage.getExpensesByUserAndDateRange(
+        user.id,
+        currentMonthStart,
+        now
+      );
+      
+      const currentMonthExpenseTotal = currentMonthExpenses.reduce(
+        (sum, expense) => sum + Number(expense.amount),
+        0
+      );
+      
+      // Ottieni le spese nel mese precedente
+      const previousMonthExpenses = await storage.getExpensesByUserAndDateRange(
+        user.id,
+        previousMonthStart,
+        previousMonthEnd
+      );
+      
+      const previousMonthExpenseTotal = previousMonthExpenses.reduce(
+        (sum, expense) => sum + Number(expense.amount),
+        0
+      );
+      
+      // Calcola la variazione percentuale per le spese
+      let expensesPercentChange = 0;
+      if (previousMonthExpenseTotal > 0) {
+        expensesPercentChange = ((currentMonthExpenseTotal - previousMonthExpenseTotal) / previousMonthExpenseTotal) * 100;
+      }
+      
+      res.json({
+        currentMonthHours,
+        previousMonthHours,
+        hoursPercentChange: parseFloat(hoursPercentChange.toFixed(1)),
+        currentMonthExpenseTotal,
+        previousMonthExpenseTotal,
+        expensesPercentChange: parseFloat(expensesPercentChange.toFixed(1))
+      });
+    } catch (error) {
+      console.error("Error getting month stats:", error);
+      res.status(500).json({ error: "Errore durante il recupero delle statistiche mensili" });
+    }
+  });
+  
   // API routes for activity types
   app.get("/api/activity-types", async (req, res) => {
     const activityTypes = await storage.getActivityTypes();

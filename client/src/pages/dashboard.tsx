@@ -191,9 +191,26 @@ export default function Dashboard() {
   // Calculate total weekly hours
   const totalWeeklyHours = weeklyTimeData.reduce((sum, day) => sum + day.hours, 0);
   
-  // Parametri configurabili per ferie e permessi
-  const totalVacationDays = 25; // Giorni totali di ferie all'anno (dovrebbe provenire dalle configurazioni utente)
-  const totalLeaveHours = 40; // Ore totali di permesso (dovrebbe provenire dalle configurazioni utente)
+  // Ottieni configurazioni utente (ferie, permessi, ecc.)
+  const { data: userConfig, isLoading: isLoadingUserConfig } = useQuery({
+    queryKey: ["/api/user/config"],
+    enabled: !!user,
+    staleTime: 0,
+    refetchOnWindowFocus: true
+  });
+
+  // Ottieni statistiche mensili con variazioni
+  const { data: monthStats, isLoading: isLoadingMonthStats } = useQuery({
+    queryKey: ["/api/user/month-stats"],
+    enabled: !!user,
+    staleTime: 0,
+    refetchOnWindowFocus: true
+  });
+  
+  // Valori di default per configurazioni utente
+  const totalVacationDays = userConfig?.totalVacationDays || 25;
+  const totalLeaveHours = userConfig?.totalLeaveHours || 40;
+  const fiscalYearEnd = userConfig?.fiscalYearEnd || "31/12/2025";
   
   // Calcolo delle ferie utilizzate in giorni
   const usedVacationDays = leaveRequests
@@ -213,6 +230,10 @@ export default function Dashboard() {
   
   const remainingVacationDays = totalVacationDays - usedVacationDays;
   const remainingLeaveHours = totalLeaveHours - usedLeaveHours;
+  
+  // Variazione percentuale ore e spese rispetto al mese precedente
+  const hoursPercentChange = monthStats?.hoursPercentChange || 0;
+  const expensesPercentChange = monthStats?.expensesPercentChange || 0;
   
   // Find next business trip
   const upcomingTrips = trips
@@ -264,9 +285,7 @@ export default function Dashboard() {
   .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
   .slice(0, 4);
   
-  // Example data for previous month comparison
-  const previousMonthPercentChange = 7.2;
-  const previousMonthExpensesChange = -3.8;
+  // Questa riga è stata rimossa in quanto usiamo i dati API reali per le percentuali
   
   const handleExportReport = () => {
     toast({
