@@ -191,8 +191,25 @@ export default function Dashboard() {
   // Calculate total weekly hours
   const totalWeeklyHours = weeklyTimeData.reduce((sum, day) => sum + day.hours, 0);
   
+  // Definisci l'interfaccia per la configurazione utente
+  interface UserConfig {
+    totalVacationDays: number;
+    totalLeaveHours: number;
+    fiscalYearEnd: string;
+  }
+  
+  // Definisci l'interfaccia per le statistiche mensili
+  interface MonthStats {
+    currentMonthHours: number;
+    previousMonthHours: number;
+    hoursPercentChange: number;
+    currentMonthExpenseTotal: number;
+    previousMonthExpenseTotal: number;
+    expensesPercentChange: number;
+  }
+
   // Ottieni configurazioni utente (ferie, permessi, ecc.)
-  const { data: userConfig, isLoading: isLoadingUserConfig } = useQuery({
+  const { data: userConfig, isLoading: isLoadingUserConfig } = useQuery<UserConfig>({
     queryKey: ["/api/user/config"],
     enabled: !!user,
     staleTime: 0,
@@ -200,7 +217,7 @@ export default function Dashboard() {
   });
 
   // Ottieni statistiche mensili con variazioni
-  const { data: monthStats, isLoading: isLoadingMonthStats } = useQuery({
+  const { data: monthStats, isLoading: isLoadingMonthStats } = useQuery<MonthStats>({
     queryKey: ["/api/user/month-stats"],
     enabled: !!user,
     staleTime: 0,
@@ -434,23 +451,23 @@ export default function Dashboard() {
               title="Ore Registrate (Mese)"
               value={`${totalMonthlyHours.toFixed(1)}`}
               icon={<Clock className="h-5 w-5 md:h-6 md:w-6" />}
-              changeValue={`+${previousMonthPercentChange}% rispetto al mese scorso`}
-              changeType="positive"
+              changeValue={`${hoursPercentChange > 0 ? '+' : ''}${hoursPercentChange.toFixed(1)}% rispetto al mese scorso`}
+              changeType={hoursPercentChange >= 0 ? "positive" : "negative"}
             />
             
             <SummaryCard
               title="Note Spese (Mese)"
               value={`€${totalMonthlyExpenses.toFixed(2)}`}
               icon={<DollarSign className="h-5 w-5 md:h-6 md:w-6" />}
-              changeValue={`${previousMonthExpensesChange}% rispetto al mese scorso`}
-              changeType="negative"
+              changeValue={`${expensesPercentChange > 0 ? '+' : ''}${expensesPercentChange.toFixed(1)}% rispetto al mese scorso`}
+              changeType={expensesPercentChange >= 0 ? "positive" : "negative"}
             />
             
             <SummaryCard
               title="Ferie Rimanenti"
               value={`${remainingVacationDays} giorni`}
               icon={<Calendar className="h-5 w-5 md:h-6 md:w-6" />}
-              infoText="Scadenza: 31/12/2023"
+              infoText={`Scadenza: ${fiscalYearEnd}`}
             />
             
             <SummaryCard
