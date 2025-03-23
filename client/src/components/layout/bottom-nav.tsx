@@ -35,7 +35,14 @@ export default function BottomNav() {
     };
   }, []);
   
-  const mainLinks = [
+  // In futuro, queste impostazioni potrebbero essere caricate dalle preferenze utente salvate
+  // e rese personalizzabili attraverso un'interfaccia utente dedicata
+  const [userSettings, setUserSettings] = useState({
+    favoriteLinks: [] as string[] // array di percorsi preferiti dell'utente
+  });
+  
+  // Link principali della barra di navigazione (default)
+  const allMainLinks = [
     { href: "/", icon: LayoutDashboard, label: "Dashboard" },
     { href: "/timesheet", icon: Clock, label: "Consuntivi" },
     { href: "/expenses", icon: DollarSign, label: "Spese" },
@@ -93,7 +100,7 @@ export default function BottomNav() {
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t z-40 lg:hidden">
         <div className="flex items-center justify-around h-16">
-          {mainLinks.map((link) => (
+          {allMainLinks.map((link) => (
             <Link key={link.href} href={link.href}>
               <div className="flex flex-col items-center">
                 <div className={`p-1.5 ${currentPath === link.href ? 'text-primary-500' : 'text-neutral-500'}`}>
