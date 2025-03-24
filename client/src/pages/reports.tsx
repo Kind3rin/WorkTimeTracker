@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { format, startOfMonth, endOfMonth, subMonths, parseISO, differenceInDays } from "date-fns";
 import { it } from "date-fns/locale";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import html2canvas from "html2canvas";
 import { 
   BarChart as BarChartIcon, 
   CalendarIcon, 
@@ -246,12 +249,275 @@ export default function Reports() {
   // Colors for pie chart
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
   
+  // Riferimenti per i contenuti da esportare
+  const reportContentRef = useRef<HTMLDivElement>(null);
+  const chartsRef = useRef<HTMLDivElement>(null);
+  
   // Handle report download
-  const handleDownloadReport = () => {
+  const handleDownloadReport = async () => {
+    // Mostra notifica iniziale
     toast({
-      title: "Download avviato",
-      description: "Il report sarà pronto a breve. La funzionalità di esportazione è in fase di implementazione.",
+      title: "Generazione PDF in corso",
+      description: "Stiamo preparando il tuo report in PDF, attendi qualche secondo...",
     });
+    
+    try {
+      if (!reportContentRef.current) {
+        throw new Error("Contenuto del report non disponibile");
+      }
+      
+      // Creiamo un nuovo documento PDF in formato A4
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+      
+      // Aggiungiamo intestazione
+      pdf.setFontSize(20);
+      pdf.setTextColor(31, 41, 55); // Testo scuro
+      pdf.text(reportInfo.title, 20, 20);
+      
+      pdf.setFontSize(12);
+      pdf.setTextColor(107, 114, 128); // Testo grigio
+      pdf.text(`Periodo: ${getPeriodLabel()}`, 20, 30);
+      pdf.text(`Generato il: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 20, 37);
+      
+      if (user) {
+        pdf.text(`Utente: ${user.fullName || user.username}`, 20, 44);
+      }
+      
+      pdf.line(20, 50, 190, 50); // Linea separatrice
+      
+      // Contenuto variabile in base al tipo di report
+      pdf.setFontSize(14);
+      pdf.setTextColor(31, 41, 55);
+      
+      let yPos = 60;
+      
+      if (reportType === "activity") {
+        // Report attività
+        pdf.text("Riepilogo Attività", 20, yPos);
+        yPos += 10;
+        
+        pdf.setFontSize(12);
+        pdf.text(`Ore totali: ${reportData.totalHours}`, 20, yPos);
+        yPos += 7;
+        pdf.text(`Progetti attivi: ${reportData.projectDistribution.length}`, 20, yPos);
+        yPos += 7;
+        pdf.text(`Media giornaliera: ${(reportData.totalHours / Math.max(1, timeEntries.length)).toFixed(1)}`, 20, yPos);
+        yPos += 15;
+        
+        // Tabella delle attività
+        const tableData = timeEntries.map(entry => {
+          const project = projects.find(p => p.id === entry.projectId);
+          const activityType = activityTypes.find(t => t.id === entry.activityTypeId);
+          
+          return [
+            format(new Date(entry.date), "dd/MM/yyyy"),
+            project?.name || 'N/A',
+            activityType?.name || 'N/A',
+            entry.description,
+            `${entry.hours}`,
+            entry.status === 'approved' ? 'Approvato' : entry.status === 'rejected' ? 'Respinto' : 'In attesa'
+          ];
+        });
+        
+        autoTable(pdf, {
+          head: [['Data', 'Progetto', 'Tipo', 'Descrizione', 'Ore', 'Stato']],
+          body: tableData,
+          startY: yPos,
+          theme: 'grid',
+          headStyles: {
+            fillColor: [0, 123, 255],
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+          },
+          alternateRowStyles: {
+            fillColor: [240, 240, 240],
+          },
+          styles: {
+            fontSize: 10,
+          },
+        });
+        
+        yPos = (pdf as any).lastAutoTable.finalY + 20;
+        
+        // Se c'è abbastanza spazio, aggiungiamo il grafico di distribuzione per progetto
+        if (yPos < 200 && reportData.projectDistribution.length > 0) {
+          pdf.text("Distribuzione ore per progetto:", 20, yPos);
+          yPos += 10;
+          
+          let distributionText = "";
+          reportData.projectDistribution.forEach(item => {
+            distributionText += `${item.name}: ${item.hours} ore (${((item.hours / reportData.totalHours) * 100).toFixed(1)}%)\n`;
+          });
+          
+          pdf.setFontSize(10);
+          pdf.text(distributionText, 25, yPos);
+        }
+      } else if (reportType === "expense") {
+        // Report spese
+        pdf.text("Riepilogo Spese", 20, yPos);
+        yPos += 10;
+        
+        pdf.setFontSize(12);
+        pdf.text(`Totale spese: €${reportData.totalAmount.toFixed(2)}`, 20, yPos);
+        yPos += 7;
+        pdf.text(`Categorie: ${reportData.categoryDistribution.length}`, 20, yPos);
+        yPos += 7;
+        pdf.text(`Media per spesa: €${(reportData.totalAmount / Math.max(1, expenses.length)).toFixed(2)}`, 20, yPos);
+        yPos += 15;
+        
+        // Tabella delle spese
+        const tableData = expenses.map(expense => {
+          const getCategoryName = (cat: string) => {
+            const map: Record<string, string> = {
+              travel: "Viaggi",
+              meal: "Pasti",
+              accommodation: "Alloggio",
+              other: "Altro",
+            };
+            return map[cat] || cat;
+          };
+          
+          return [
+            format(new Date(expense.date), "dd/MM/yyyy"),
+            getCategoryName(expense.category),
+            expense.description,
+            `€${Number(expense.amount).toFixed(2)}`,
+            expense.status === 'approved' ? 'Approvato' : expense.status === 'rejected' ? 'Respinto' : 'In attesa'
+          ];
+        });
+        
+        autoTable(pdf, {
+          head: [['Data', 'Categoria', 'Descrizione', 'Importo', 'Stato']],
+          body: tableData,
+          startY: yPos,
+          theme: 'grid',
+          headStyles: {
+            fillColor: [0, 123, 255],
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+          },
+          alternateRowStyles: {
+            fillColor: [240, 240, 240],
+          },
+          styles: {
+            fontSize: 10,
+          },
+        });
+        
+        yPos = (pdf as any).lastAutoTable.finalY + 20;
+        
+        // Se c'è abbastanza spazio, aggiungiamo il grafico di distribuzione per categoria
+        if (yPos < 200 && reportData.categoryDistribution.length > 0) {
+          pdf.text("Distribuzione spese per categoria:", 20, yPos);
+          yPos += 10;
+          
+          let distributionText = "";
+          reportData.categoryDistribution.forEach(item => {
+            distributionText += `${item.name}: €${item.value.toFixed(2)} (${((item.value / reportData.totalAmount) * 100).toFixed(1)}%)\n`;
+          });
+          
+          pdf.setFontSize(10);
+          pdf.text(distributionText, 25, yPos);
+        }
+      } else if (reportType === "leave") {
+        // Report assenze
+        pdf.text("Riepilogo Assenze", 20, yPos);
+        yPos += 10;
+        
+        pdf.setFontSize(12);
+        pdf.text(`Giorni totali: ${reportData.totalDays}`, 20, yPos);
+        yPos += 7;
+        
+        // Dettagli per tipologia
+        let detailsText = "";
+        reportData.typeDistribution.forEach(item => {
+          detailsText += `${item.name}: ${item.days} giorni\n`;
+        });
+        
+        pdf.setFontSize(10);
+        pdf.text(detailsText, 25, yPos);
+        yPos += (reportData.typeDistribution.length * 5) + 10;
+        
+        // Tabella delle assenze
+        const tableData = leaveRequests.map(leave => {
+          const getTypeName = (type: string) => {
+            const map: Record<string, string> = {
+              vacation: "Ferie",
+              sick_leave: "Malattia",
+              personal_leave: "Permessi",
+            };
+            return map[type] || type;
+          };
+          
+          const days = differenceInDays(new Date(leave.endDate), new Date(leave.startDate)) + 1;
+          
+          return [
+            format(new Date(leave.startDate), "dd/MM/yyyy"),
+            format(new Date(leave.endDate), "dd/MM/yyyy"),
+            getTypeName(leave.type),
+            days.toString(),
+            leave.reason || '',
+            leave.status === 'approved' ? 'Approvato' : leave.status === 'rejected' ? 'Respinto' : 'In attesa'
+          ];
+        });
+        
+        autoTable(pdf, {
+          head: [['Data inizio', 'Data fine', 'Tipo', 'Giorni', 'Motivo', 'Stato']],
+          body: tableData,
+          startY: yPos,
+          theme: 'grid',
+          headStyles: {
+            fillColor: [0, 123, 255],
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+          },
+          alternateRowStyles: {
+            fillColor: [240, 240, 240],
+          },
+          styles: {
+            fontSize: 10,
+          },
+        });
+      }
+      
+      // Footer
+      const pageCount = pdf.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(150, 150, 150);
+        
+        // Footer con pagina corrente
+        pdf.text(
+          `${reportInfo.title} - ${getPeriodLabel()} - Pagina ${i} di ${pageCount}`,
+          pdf.internal.pageSize.getWidth() / 2, 
+          pdf.internal.pageSize.getHeight() - 10, 
+          { align: 'center' }
+        );
+      }
+      
+      // Salva il PDF con un nome che include il tipo di report e la data
+      const fileName = `${reportInfo.title.replace(/\s+/g, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      pdf.save(fileName);
+      
+      toast({
+        title: "PDF generato con successo",
+        description: `Il file ${fileName} è stato scaricato.`,
+        variant: "default",
+      });
+      
+    } catch (error) {
+      console.error("Errore durante la generazione del PDF:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante la generazione del PDF. Riprova più tardi.",
+        variant: "destructive",
+      });
+    }
   };
   
   // Format period label
@@ -370,7 +636,7 @@ export default function Reports() {
                   <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
                 </div>
               ) : (
-                <div>
+                <div ref={reportContentRef}>
                   <div className="mb-8">
                     <h3 className="text-lg font-medium mb-4">Riepilogo per il periodo: {getPeriodLabel()}</h3>
                     
@@ -476,7 +742,7 @@ export default function Reports() {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8" ref={chartsRef}>
                     {/* Pie Chart */}
                     <Card>
                       <CardHeader>
