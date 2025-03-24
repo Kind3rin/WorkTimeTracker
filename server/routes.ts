@@ -239,8 +239,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(0);
     const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
     
-    const timeEntries = await storage.getTimeEntriesByUserAndDateRange(userId, startDate, endDate);
-    res.json(timeEntries);
+    // Aggiungi header per evitare problemi di caching
+    res.setHeader('Cache-Control', 'no-store, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    try {
+      console.log(`Fetching time entries for user ${userId} from ${startDate} to ${endDate}`);
+      const timeEntries = await storage.getTimeEntriesByUserAndDateRange(userId, startDate, endDate);
+      console.log(`Found ${timeEntries.length} time entries`);
+      res.json(timeEntries);
+    } catch (error) {
+      console.error("Error fetching time entries:", error);
+      res.status(500).json({ error: "Errore durante il recupero delle attività" });
+    }
   });
 
   app.post("/api/time-entries", async (req, res) => {
@@ -790,18 +802,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API per ottenere tutti i time entries per la dashboard (solo admin)
   app.get("/api/admin/dashboard/time-entries", isAdmin, async (req, res) => {
     try {
+      // Disabilita il caching delle risposte
+      res.setHeader('Cache-Control', 'no-store, max-age=0');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
+      const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(0);
+      const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
+      
+      console.log(`[ADMIN] Fetching all time entries from ${startDate.toISOString()} to ${endDate.toISOString()}`);
+      
       // Recupera tutti gli utenti
       const users = await storage.getAllUsers();
+      console.log(`[ADMIN] Found ${users.length} users`);
+      
       let allTimeEntries: any[] = [];
       
       // Per ogni utente, recupera i suoi time entries
       for (const user of users) {
-        const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(0);
-        const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
+        console.log(`[ADMIN] Fetching time entries for user ${user.id} (${user.username})`);
         const userTimeEntries = await storage.getTimeEntriesByUserAndDateRange(user.id, startDate, endDate);
+        console.log(`[ADMIN] Found ${userTimeEntries.length} time entries for user ${user.id}`);
         allTimeEntries = [...allTimeEntries, ...userTimeEntries];
       }
       
+      console.log(`[ADMIN] Returning ${allTimeEntries.length} total time entries`);
       res.json(allTimeEntries);
     } catch (error) {
       console.error("Error getting all time entries:", error);
@@ -812,18 +837,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API per ottenere tutte le spese per la dashboard (solo admin)
   app.get("/api/admin/dashboard/expenses", isAdmin, async (req, res) => {
     try {
+      // Disabilita il caching delle risposte
+      res.setHeader('Cache-Control', 'no-store, max-age=0');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
+      const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(0);
+      const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
+      
+      console.log(`[ADMIN] Fetching all expenses from ${startDate.toISOString()} to ${endDate.toISOString()}`);
+      
       // Recupera tutti gli utenti
       const users = await storage.getAllUsers();
+      console.log(`[ADMIN] Found ${users.length} users for expenses`);
+      
       let allExpenses: any[] = [];
       
       // Per ogni utente, recupera le sue spese
       for (const user of users) {
-        const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(0);
-        const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
+        console.log(`[ADMIN] Fetching expenses for user ${user.id} (${user.username})`);
         const userExpenses = await storage.getExpensesByUserAndDateRange(user.id, startDate, endDate);
+        console.log(`[ADMIN] Found ${userExpenses.length} expenses for user ${user.id}`);
         allExpenses = [...allExpenses, ...userExpenses];
       }
       
+      console.log(`[ADMIN] Returning ${allExpenses.length} total expenses`);
       res.json(allExpenses);
     } catch (error) {
       console.error("Error getting all expenses:", error);
@@ -834,16 +872,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API per ottenere tutte le richieste di permesso per la dashboard (solo admin)
   app.get("/api/admin/dashboard/leave-requests", isAdmin, async (req, res) => {
     try {
+      // Disabilita il caching delle risposte
+      res.setHeader('Cache-Control', 'no-store, max-age=0');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
+      console.log(`[ADMIN] Fetching all leave requests`);
+      
       // Recupera tutti gli utenti
       const users = await storage.getAllUsers();
+      console.log(`[ADMIN] Found ${users.length} users for leave requests`);
+      
       let allLeaveRequests: any[] = [];
       
       // Per ogni utente, recupera le sue richieste di permesso
       for (const user of users) {
+        console.log(`[ADMIN] Fetching leave requests for user ${user.id} (${user.username})`);
         const leaveRequests = await storage.getLeaveRequestsByUser(user.id);
+        console.log(`[ADMIN] Found ${leaveRequests.length} leave requests for user ${user.id}`);
         allLeaveRequests = [...allLeaveRequests, ...leaveRequests];
       }
       
+      console.log(`[ADMIN] Returning ${allLeaveRequests.length} total leave requests`);
       res.json(allLeaveRequests);
     } catch (error) {
       console.error("Error getting all leave requests:", error);
@@ -854,16 +904,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API per ottenere tutte le trasferte per la dashboard (solo admin)
   app.get("/api/admin/dashboard/trips", isAdmin, async (req, res) => {
     try {
+      // Disabilita il caching delle risposte
+      res.setHeader('Cache-Control', 'no-store, max-age=0');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
+      console.log(`[ADMIN] Fetching all trips`);
+      
       // Recupera tutti gli utenti
       const users = await storage.getAllUsers();
+      console.log(`[ADMIN] Found ${users.length} users for trips`);
+      
       let allTrips: any[] = [];
       
       // Per ogni utente, recupera le sue trasferte
       for (const user of users) {
+        console.log(`[ADMIN] Fetching trips for user ${user.id} (${user.username})`);
         const trips = await storage.getTripsByUser(user.id);
+        console.log(`[ADMIN] Found ${trips.length} trips for user ${user.id}`);
         allTrips = [...allTrips, ...trips];
       }
       
+      console.log(`[ADMIN] Returning ${allTrips.length} total trips`);
       res.json(allTrips);
     } catch (error) {
       console.error("Error getting all trips:", error);
