@@ -43,19 +43,66 @@ export function setupAuth(app: Express) {
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
-      const user = await storage.getUserByUsername(username);
-      if (!user || !(await comparePasswords(password, user.password))) {
-        return done(null, false);
-      } else {
-        // Verifica se è la prima login (per eventuale cambio password)
-        if (user.needsPasswordChange === true) {
-          // Aggiungiamo un flag per la modifica della password
+      try {
+        console.log(`[AUTH] Tentativo di login per username: ${username}`);
+        
+        // Cerca sia per username che per email
+        let user = await storage.getUserByUsername(username);
+        
+        if (!user) {
+          // Prova a cercare per email
+          console.log(`[AUTH] Utente non trovato per username, tentativo con email: ${username}`);
+          user = await storage.getUserByEmail(username);
+          if (!user) {
+            console.log(`[AUTH] Utente non trovato né per username né per email: ${username}`);
+            return done(null, false);
+          }
+        }
+        
+        console.log(`[AUTH] Utente trovato: ${user.username} (${user.email}), verifico password`);
+        
+        // Se l'utente è registrato tramite invito, il token di invito può essere usato come password temporanea
+        // oppure la password può essere verificata normalmente
+        if (user.invitationToken && !user.invitationTokenUsed) {
+          console.log(`[AUTH] Utente ha un token di invito non utilizzato, verifico se è stato inserito come password`);
+          
+          const isTokenValid = password === user.invitationToken;
+          const isPasswordValid = await comparePasswords(password, user.password);
+          
+          if (!isTokenValid && !isPasswordValid) {
+            console.log(`[AUTH] Password e token di invito non validi`);
+            return done(null, false);
+          }
+          
+          // Se il token è valido o la password è corretta, impostiamo il flag per il cambio password
+          console.log(`[AUTH] Autenticazione riuscita con ${isTokenValid ? 'token di invito' : 'password'}`);
           return done(null, {
             ...user,
             needsPasswordChange: true
           });
+        } else {
+          // Autenticazione normale con password
+          if (!(await comparePasswords(password, user.password))) {
+            console.log(`[AUTH] Password non valida per utente: ${user.username}`);
+            return done(null, false);
+          }
+          
+          // Verifica se è la prima login (per eventuale cambio password)
+          if (user.needsPasswordChange === true) {
+            console.log(`[AUTH] Utente richiede cambio password: ${user.username}`);
+            // Aggiungiamo un flag per la modifica della password
+            return done(null, {
+              ...user,
+              needsPasswordChange: true
+            });
+          }
+          
+          console.log(`[AUTH] Autenticazione riuscita per utente: ${user.username}`);
+          return done(null, user);
         }
-        return done(null, user);
+      } catch (error) {
+        console.error(`[AUTH] Errore durante l'autenticazione:`, error);
+        return done(error);
       }
     }),
   );
