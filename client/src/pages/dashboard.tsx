@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { 
   Clock, 
   DollarSign, 
@@ -371,6 +372,14 @@ export default function Dashboard() {
   }, [isLoading]);
   
   // Forza il rendering anche in caso di errori nel caricamento dati
+  // Fetch statistiche mensili per confronto
+  const { data: monthStats, refetch: refetchMonthStats } = useQuery({
+    queryKey: ["/api/user/month-stats"],
+    enabled: !!user,
+    staleTime: 60000, // 1 minuto
+    refetchOnWindowFocus: true
+  });
+  
   useEffect(() => {
     if (timeEntriesError || expensesError || leaveError || tripsError) {
       console.error("Errori nel caricamento dei dati:", {
@@ -486,15 +495,44 @@ export default function Dashboard() {
                 size="sm"
                 onClick={() => {
                   const refreshStart = Date.now();
+                  
+                  // Invalidate all cache first
+                  if (isAdmin) {
+                    // Invalidate admin-specific endpoints
+                    queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard/time-entries"] });
+                    queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard/expenses"] });
+                    queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard/leave-requests"] });
+                    queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard/trips"] });
+                  } else {
+                    // Invalidate user-specific endpoints
+                    queryClient.invalidateQueries({ queryKey: ["/api/time-entries/range"] });
+                    queryClient.invalidateQueries({ queryKey: ["/api/expenses/range"] });
+                    queryClient.invalidateQueries({ queryKey: ["/api/leave-requests/range"] });
+                    queryClient.invalidateQueries({ queryKey: ["/api/trips/range"] });
+                  }
+                  
+                  // Invalidate month stats
+                  queryClient.invalidateQueries({ queryKey: ["/api/user/month-stats"] });
+                  
+                  // Then refetch everything
                   Promise.all([
                     refetchTimeEntries(),
                     refetchExpenses(),
                     refetchLeaveRequests(),
-                    refetchTrips()
+                    refetchTrips(),
+                    refetchMonthStats()
                   ]).then(() => {
                     toast({
                       title: 'Dati aggiornati',
                       description: `Aggiornamento completato in ${((Date.now() - refreshStart) / 1000).toFixed(1)} secondi`,
+                    });
+                    console.log("Tutti i dati dashboard sono stati aggiornati con successo");
+                  }).catch(error => {
+                    console.error("Errore nell'aggiornamento dei dati:", error);
+                    toast({
+                      title: 'Errore',
+                      description: 'Impossibile aggiornare alcuni dati',
+                      variant: 'destructive'
                     });
                   });
                 }}

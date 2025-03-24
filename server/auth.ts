@@ -63,8 +63,8 @@ export function setupAuth(app: Express) {
         
         // Se l'utente è registrato tramite invito, il token di invito può essere usato come password temporanea
         // oppure la password può essere verificata normalmente
-        if (user.invitationToken && !user.invitationTokenUsed) {
-          console.log(`[AUTH] Utente ha un token di invito non utilizzato, verifico se è stato inserito come password`);
+        if (user.invitationToken && user.invitationToken.length > 0) {
+          console.log(`[AUTH] Utente ha un token di invito, verifico se è stato inserito come password`);
           
           const isTokenValid = password === user.invitationToken;
           const isPasswordValid = await comparePasswords(password, user.password);
