@@ -191,7 +191,7 @@ export default function AdminPage() {
     {
       accessorKey: "date",
       header: "Data",
-      cell: ({ row }) => format(new Date(row.original.date), "dd/MM/yyyy"),
+      cell: ({ row }) => formatSafeDate(row.original.date),
     },
     {
       accessorKey: "hours",
@@ -229,7 +229,7 @@ export default function AdminPage() {
     {
       accessorKey: "date",
       header: "Data",
-      cell: ({ row }) => format(new Date(row.original.date), "dd/MM/yyyy"),
+      cell: ({ row }) => formatSafeDate(row.original.date),
     },
     {
       accessorKey: "category",
