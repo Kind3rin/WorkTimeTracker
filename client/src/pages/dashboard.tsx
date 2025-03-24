@@ -224,13 +224,22 @@ export default function Dashboard() {
     };
   });
   
-  // Calculate total monthly hours
-  const totalMonthlyHours = timeEntries.reduce((sum, entry) => {
+  // Calculate total monthly hours - solo se i dati sono pronti
+  const totalMonthlyHours = !isLoadingTimeEntries ? timeEntries.reduce((sum, entry) => {
+    console.log("Calculating monthly hours from entry:", entry);
     return sum + Number(entry.hours);
-  }, 0);
+  }, 0) : 0;
   
-  // Calculate total weekly hours
-  const totalWeeklyHours = weeklyTimeData.reduce((sum, day) => sum + day.hours, 0);
+  // Calculate total weekly hours - solo se i dati sono pronti
+  const totalWeeklyHours = !isLoadingTimeEntries ? weeklyTimeData.reduce((sum, day) => sum + day.hours, 0) : 0;
+  
+  // Log per debug
+  useEffect(() => {
+    if (!isLoadingTimeEntries && timeEntries.length > 0) {
+      console.log("Dashboard ready to calculate with time entries:", timeEntries);
+      console.log("Total monthly hours calculated:", totalMonthlyHours);
+    }
+  }, [isLoadingTimeEntries, timeEntries, totalMonthlyHours]);
   
   // Configurazioni delle ferie e permessi
   // In un sistema completo, questo dovrebbe venire da un API di configurazione utente
