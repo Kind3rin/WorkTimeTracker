@@ -109,8 +109,19 @@ export default function AdminPage() {
         title: "Richiesta approvata",
         description: "La richiesta è stata approvata con successo",
       });
+      // Invalida tutte le query admin
       queryClient.invalidateQueries({ queryKey: ['/api/admin'] });
+      
+      // Invalida anche le query della dashboard per aggiornare i dati in tempo reale
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/time-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/trips'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/leave-requests'] });
+      
       setDetailsOpen(false);
+      
+      console.log("Query invalidate dopo approvazione");
     },
     onError: (error: Error) => {
       toast({
@@ -140,8 +151,19 @@ export default function AdminPage() {
         title: "Richiesta rifiutata",
         description: "La richiesta è stata rifiutata con successo",
       });
+      // Invalida tutte le query admin
       queryClient.invalidateQueries({ queryKey: ['/api/admin'] });
+      
+      // Invalida anche le query della dashboard per aggiornare i dati in tempo reale
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/time-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/trips'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/leave-requests'] });
+      
       setDetailsOpen(false);
+      
+      console.log("Query invalidate dopo rifiuto");
     },
     onError: (error: Error) => {
       toast({
