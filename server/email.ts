@@ -11,7 +11,11 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER || '88a8f9001@smtp-brevo.com',
     pass: process.env.EMAIL_PASS || 'xSgXDMwA7WVpUnvk'
-  }
+  },
+  // Aumenta il timeout per dare più tempo al server SMTP di rispondere
+  connectionTimeout: 10000, // 10 secondi
+  greetingTimeout: 10000,  // 10 secondi
+  socketTimeout: 20000     // 20 secondi
 });
 
 // Genera un token casuale
@@ -31,6 +35,15 @@ export async function sendInvitationEmail(
   invitationToken: string
 ): Promise<boolean> {
   try {
+    console.log(`[DEBUG] Tentativo di invio email a: ${user.email}`);
+    console.log(`[DEBUG] Configurazione SMTP: host=${process.env.EMAIL_HOST || 'smtp-relay.brevo.com'}, port=${parseInt(process.env.EMAIL_PORT || '587')}`);
+    
+    // Ottieni l'URL corrente dell'applicazione
+    const appUrl = process.env.APP_URL || 'https://workspace.replit.dev';
+    const invitationUrl = `${appUrl}/invitation/${invitationToken}`;
+    
+    console.log(`[DEBUG] URL di invito: ${invitationUrl}`);
+    
     // Per test in ambiente di sviluppo, stampa a console invece di inviare email
     if (process.env.NODE_ENV === 'development') {
       console.log(`
@@ -46,7 +59,7 @@ export async function sendInvitationEmail(
         Password temporanea: ${temporaryPassword}
         
         Per accedere, visita il seguente link:
-        ${process.env.APP_URL || 'https://8894a171-ba6b-42a6-9d6f-d055b209fdce-00-3fwvy3q9kkmdp.picard.replit.dev'}/invitation/${invitationToken}
+        ${invitationUrl}
         
         La password temporanea e il link di invito scadranno fra 24 ore.
         Ti verrà richiesto di cambiare la password al primo accesso.
@@ -75,7 +88,7 @@ export async function sendInvitationEmail(
           
           <p>Per accedere, clicca sul seguente pulsante:</p>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.APP_URL || 'https://8894a171-ba6b-42a6-9d6f-d055b209fdce-00-3fwvy3q9kkmdp.picard.replit.dev'}/invitation/${invitationToken}" 
+            <a href="${invitationUrl}" 
                style="background-color: #3b82f6; color: white; padding: 10px 20px; 
                       text-decoration: none; border-radius: 5px; font-weight: bold;">
               Accedi a Time Tracker
@@ -92,8 +105,20 @@ export async function sendInvitationEmail(
       `
     };
     
+    console.log(`[DEBUG] Invio email a: ${mailOptions.to} da: ${mailOptions.from}`);
+    
+    // Verifica la connessione SMTP prima di inviare
+    try {
+      const verifyResult = await transporter.verify();
+      console.log(`[DEBUG] Verifica SMTP: ${verifyResult ? 'Successo' : 'Fallita'}`);
+    } catch (verifyError) {
+      console.error('[DEBUG] Errore verifica SMTP:', verifyError);
+      // Continua comunque a provare a inviare l'email
+    }
+    
     // Invia l'email
-    await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`[DEBUG] Email inviata con successo: ${JSON.stringify(info)}`);
     return true;
   } catch (error) {
     console.error('Errore durante l\'invio dell\'email:', error);
