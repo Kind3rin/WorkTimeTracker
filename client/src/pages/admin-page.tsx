@@ -815,6 +815,29 @@ export default function AdminPage() {
       default: return "";
     }
   };
+  
+  // Helper per ottenere l'etichetta dell'entità in italiano
+  const getEntityLabel = (type: string) => {
+    switch (type) {
+      case "timesheet": 
+      case "timeEntries": 
+        return "Registrazione oraria";
+      case "expense": 
+      case "expenses": 
+        return "Spesa";
+      case "trip": 
+      case "trips": 
+        return "Trasferta";
+      case "leave": 
+      case "leaveRequests": 
+        return "Richiesta ferie";
+      case "sickleave": 
+      case "sickLeaves": 
+        return "Permesso malattia";
+      default: 
+        return "Richiesta";
+    }
+  };
 
   // Render del loader per i dati
   if (isLoading) {
