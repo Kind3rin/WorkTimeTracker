@@ -95,8 +95,7 @@ export default function AdminPage() {
     );
   }
 
-  // Funzione per mappare il tipo di mutazione al tipo di entità
-  // Usiamo la funzione getMutationType che è definita più avanti nel codice
+  // Nota: la funzione getMutationType viene definita più avanti nel file
 
   // Query per ottenere le richieste in base al tab selezionato
   const { data: pendingItems, isLoading, error, refetch } = useQuery({
