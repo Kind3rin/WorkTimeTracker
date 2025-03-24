@@ -1066,21 +1066,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id, action } = req.params;
       const timeEntryId = parseInt(id);
       
+      // Log dettagliato per il debug
+      console.log(`Ricevuta richiesta di ${action} per timeEntry ID ${timeEntryId} da admin ID ${req.user!.id}`);
+      
       if (!["approve", "reject"].includes(action)) {
         return res.status(400).json({ error: "Azione non valida. Usa 'approve' o 'reject'" });
       }
       
-      const status = action === "approve" ? "approved" : "rejected";
-      const updatedTimeEntry = await storage.updateTimeEntryStatus(timeEntryId, status);
-      
-      if (!updatedTimeEntry) {
+      // Verifica che la time entry esista prima dell'aggiornamento
+      const timeEntry = await storage.getTimeEntry(timeEntryId);
+      if (!timeEntry) {
+        console.error(`TimeEntry ID ${timeEntryId} non trovato nel database`);
         return res.status(404).json({ error: "Registrazione oraria non trovata" });
       }
       
-      res.json(updatedTimeEntry);
+      console.log(`TimeEntry trovata:`, timeEntry);
+      
+      // Se già approvata/rifiutata, non permettere modifiche
+      if (timeEntry.status === 'approved' || timeEntry.status === 'rejected') {
+        console.warn(`Tentativo di modificare lo stato di una entry già ${timeEntry.status}`);
+        return res.status(400).json({ 
+          error: "Non è possibile modificare lo stato di una registrazione già approvata o rifiutata",
+          currentStatus: timeEntry.status 
+        });
+      }
+      
+      const status = action === "approve" ? "approved" : "rejected";
+      console.log(`Aggiornamento stato a: ${status}`);
+      
+      const updatedTimeEntry = await storage.updateTimeEntryStatus(timeEntryId, status);
+      
+      if (!updatedTimeEntry) {
+        console.error(`Aggiornamento fallito per timeEntry ID ${timeEntryId}`);
+        return res.status(500).json({ error: "Errore durante l'aggiornamento dello stato" });
+      }
+      
+      console.log(`TimeEntry aggiornata con successo:`, updatedTimeEntry);
+      
+      // Ritorna un oggetto che include informazioni extra per il client
+      res.json({
+        success: true,
+        id: timeEntryId,
+        type: "timeEntries",
+        action: action,
+        status: status,
+        entry: updatedTimeEntry
+      });
     } catch (error) {
       console.error(`Error ${req.params.action}ing time entry:`, error);
-      res.status(500).json({ error: `Errore durante l'${req.params.action === "approve" ? "approvazione" : "rifiuto"} della registrazione oraria` });
+      res.status(500).json({ 
+        error: `Errore durante l'${req.params.action === "approve" ? "approvazione" : "rifiuto"} della registrazione oraria`,
+        details: error instanceof Error ? error.message : String(error)
+      });
     }
   });
   
@@ -1090,21 +1127,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id, action } = req.params;
       const expenseId = parseInt(id);
       
+      // Log dettagliato per il debug
+      console.log(`Ricevuta richiesta di ${action} per expense ID ${expenseId} da admin ID ${req.user!.id}`);
+      
       if (!["approve", "reject"].includes(action)) {
         return res.status(400).json({ error: "Azione non valida. Usa 'approve' o 'reject'" });
       }
       
-      const status = action === "approve" ? "approved" : "rejected";
-      const updatedExpense = await storage.updateExpenseStatus(expenseId, status);
-      
-      if (!updatedExpense) {
+      // Verifica che la spesa esista prima dell'aggiornamento
+      const expense = await storage.getExpense(expenseId);
+      if (!expense) {
+        console.error(`Expense ID ${expenseId} non trovata nel database`);
         return res.status(404).json({ error: "Spesa non trovata" });
       }
       
-      res.json(updatedExpense);
+      console.log(`Expense trovata:`, expense);
+      
+      // Se già approvata/rifiutata, non permettere modifiche
+      if (expense.status === 'approved' || expense.status === 'rejected') {
+        console.warn(`Tentativo di modificare lo stato di una spesa già ${expense.status}`);
+        return res.status(400).json({ 
+          error: "Non è possibile modificare lo stato di una spesa già approvata o rifiutata",
+          currentStatus: expense.status 
+        });
+      }
+      
+      const status = action === "approve" ? "approved" : "rejected";
+      console.log(`Aggiornamento stato a: ${status}`);
+      
+      const updatedExpense = await storage.updateExpenseStatus(expenseId, status);
+      
+      if (!updatedExpense) {
+        console.error(`Aggiornamento fallito per expense ID ${expenseId}`);
+        return res.status(500).json({ error: "Errore durante l'aggiornamento dello stato" });
+      }
+      
+      console.log(`Expense aggiornata con successo:`, updatedExpense);
+      
+      // Ritorna un oggetto che include informazioni extra per il client
+      res.json({
+        success: true,
+        id: expenseId,
+        type: "expenses",
+        action: action,
+        status: status,
+        expense: updatedExpense
+      });
     } catch (error) {
       console.error(`Error ${req.params.action}ing expense:`, error);
-      res.status(500).json({ error: `Errore durante l'${req.params.action === "approve" ? "approvazione" : "rifiuto"} della spesa` });
+      res.status(500).json({ 
+        error: `Errore durante l'${req.params.action === "approve" ? "approvazione" : "rifiuto"} della spesa`,
+        details: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 

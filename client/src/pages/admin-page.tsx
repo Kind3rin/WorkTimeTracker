@@ -134,38 +134,61 @@ export default function AdminPage() {
     onSuccess: (data) => {
       console.log("Approvazione completata:", data);
       
+      // Usa i dati della risposta per costruire un messaggio più descrittivo
+      const entityLabel = getEntityLabel(data.type);
+      
       toast({
-        title: "Richiesta approvata",
-        description: "La richiesta è stata approvata con successo",
+        title: "Approvazione completata",
+        description: `${entityLabel} #${data.id} approvato con successo`,
       });
       
-      // Invalida tutte le query in modo più aggressivo
-      queryClient.clear(); // Rimuove tutto dalla cache
+      // Processo di aggiornamento cache in due fasi
+      // Fase 1: Cancella completamente la cache
+      queryClient.clear();
+      console.log("Cache completamente cancellata dopo approvazione");
       
-      // Invalida manualmente le query specifiche
-      queryClient.invalidateQueries({ queryKey: ['/api/admin'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard'] });
-      
-      // Invalide le query specifiche per ciascun tipo di risorsa
-      const entityType = getMutationType(data.type);
-      if (entityType) {
-        console.log(`Invalida cache per ${entityType}`);
-        queryClient.invalidateQueries({ queryKey: [`/api/${entityType}`] });
+      // Fase 2: Forza il refetch specifico delle query chiave
+      setTimeout(() => {
+        // Invalide le query specifiche per ciascun tipo di risorsa
+        const entityType = getMutationType(data.type);
         
-        // Se è una risorsa che può apparire nella dashboard, invalida anche la dashboard utente
-        if (['timeEntries', 'expenses', 'trips', 'leaveRequests'].includes(entityType)) {
-          queryClient.invalidateQueries({ queryKey: ['/api/user/dashboard'] });
+        // Forza il refresh di tutte le query chiave per l'admin
+        queryClient.refetchQueries({ 
+          queryKey: ['/api/admin/dashboard/time-entries'],
+          exact: false 
+        });
+        
+        queryClient.refetchQueries({ 
+          queryKey: ['/api/time-entries/range'],
+          exact: false 
+        });
+        
+        if (entityType) {
+          console.log(`Forza refresh per ${entityType}`);
+          
+          // Forza l'aggiornamento per i dati specifici dell'entità
+          queryClient.refetchQueries({ 
+            queryKey: [`/api/${entityType}`],
+            exact: false 
+          });
+          
+          // Se è una risorsa che può apparire nella dashboard, forza anche la dashboard utente
+          if (['timeEntries', 'expenses', 'trips', 'leaveRequests'].includes(entityType)) {
+            queryClient.refetchQueries({ 
+              queryKey: ['/api/user/dashboard'],
+              exact: false 
+            });
+          }
         }
-      }
+        
+        // Infine, forza l'aggiornamento della vista admin corrente
+        setTimeout(() => {
+          refetch();
+          console.log("Refetch completato per tutti i dati admin");
+        }, 300);
+      }, 300);
       
       setDetailsOpen(false);
-      
-      console.log("Cache invalidata dopo approvazione");
-      
-      // Forza l'aggiornamento dei dati dopo un breve ritardo
-      setTimeout(() => {
-        refetch();
-      }, 500);
     },
     onError: (error: Error) => {
       console.error("Errore durante l'approvazione:", error);
