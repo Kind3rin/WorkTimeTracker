@@ -96,9 +96,9 @@ export default function Dashboard() {
         }],
     enabled: !!user,
     retry: 1, // Reduce retries for faster failure
-    staleTime: 0, // Forza un rinnovo dei dati a ogni caricamento
-    refetchOnWindowFocus: true, // Ricarica i dati quando la finestra recupera il focus
-    refetchInterval: 60000, // Ricarica i dati ogni minuto
+    staleTime: 300000, // Considera i dati validi per 5 minuti prima di richiedere un aggiornamento
+    refetchOnWindowFocus: false, // Disabilitiamo il refresh automatico quando il focus torna sulla finestra
+    gcTime: 600000 // Mantiene i dati in cache per 10 minuti (v5 di TanStack Query)
   });
   
   // Fetch spese con parametri specifici per azienda o tutte le spese se admin
@@ -116,9 +116,9 @@ export default function Dashboard() {
         }],
     enabled: !!user,
     retry: 1,
-    staleTime: 0, // Forza un rinnovo dei dati a ogni caricamento
-    refetchOnWindowFocus: true, // Ricarica i dati quando la finestra recupera il focus
-    refetchInterval: 60000, // Ricarica i dati ogni minuto
+    staleTime: 300000, // Considera i dati validi per 5 minuti prima di richiedere un aggiornamento
+    refetchOnWindowFocus: false, // Disabilitiamo il refresh automatico quando il focus torna sulla finestra
+    gcTime: 600000 // Mantiene i dati in cache per 10 minuti (v5 di TanStack Query)
   });
   
   // Fetch richieste ferie con parametri specifici per azienda o tutte le richieste se admin
@@ -129,9 +129,9 @@ export default function Dashboard() {
       : ["/api/leave-requests", { companyId }],
     enabled: !!user,
     retry: 1,
-    staleTime: 0, // Forza un rinnovo dei dati a ogni caricamento
-    refetchOnWindowFocus: true, // Ricarica i dati quando la finestra recupera il focus
-    refetchInterval: 60000, // Ricarica i dati ogni minuto
+    staleTime: 300000, // Considera i dati validi per 5 minuti prima di richiedere un aggiornamento
+    refetchOnWindowFocus: false, // Disabilitiamo il refresh automatico quando il focus torna sulla finestra
+    gcTime: 600000 // Mantiene i dati in cache per 10 minuti (v5 di TanStack Query)
   });
   
   // Fetch trasferte con parametri specifici per azienda o tutte le trasferte se admin
