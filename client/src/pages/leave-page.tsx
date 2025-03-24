@@ -168,9 +168,10 @@ export default function LeavePage() {
     }
   };
 
-  // Calculate the duration in days
+  // Calculate the duration in hours (8 ore lavorative per giorno)
   const calculateDuration = (startDate: Date, endDate: Date): number => {
-    return differenceInBusinessDays(endDate, startDate) + 1;
+    const days = differenceInBusinessDays(endDate, startDate) + 1;
+    return days * 8; // 8 ore per giorno lavorativo
   };
 
   const columns: ColumnDef<Leave>[] = [
@@ -197,7 +198,7 @@ export default function LeavePage() {
           new Date(row.original.startDate),
           new Date(row.original.endDate)
         );
-        return <div>{duration} {duration === 1 ? "giorno" : "giorni"}</div>;
+        return <div>{duration} {duration === 1 ? "ora" : "ore"}</div>;
       },
     },
     {
