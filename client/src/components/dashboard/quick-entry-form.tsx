@@ -78,6 +78,8 @@ export default function QuickEntryForm() {
       // Invalida tutte le query correlate
       queryClient.invalidateQueries({ queryKey: ["/api/time-entries"] });
       queryClient.invalidateQueries({ queryKey: ["/api/time-entries/range"] });
+      // Invalida anche le query della dashboard admin
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard/time-entries"] });
       form.reset({
         date: new Date().toISOString().split("T")[0],
         activityTypeId: "",

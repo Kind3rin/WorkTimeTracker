@@ -8,7 +8,8 @@ import {
   MapPin, 
   Loader2,
   BarChart3,
-  LucideBarChart
+  LucideBarChart,
+  RefreshCw
 } from "lucide-react";
 import Sidebar from "@/components/layout/sidebar";
 import SummaryCard from "@/components/dashboard/summary-card";
@@ -22,6 +23,7 @@ import { addDays, format, parseISO, startOfWeek, endOfWeek, startOfMonth, endOfM
 import { it } from 'date-fns/locale';
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -142,9 +144,9 @@ export default function Dashboard() {
       : ["/api/trips", { companyId }],
     enabled: !!user,
     retry: 1,
-    staleTime: 0, // Forza un rinnovo dei dati a ogni caricamento
-    refetchOnWindowFocus: true, // Ricarica i dati quando la finestra recupera il focus
-    refetchInterval: 60000, // Ricarica i dati ogni minuto
+    staleTime: 300000, // Considera i dati validi per 5 minuti prima di richiedere un aggiornamento
+    refetchOnWindowFocus: false, // Disabilitiamo il refresh automatico quando il focus torna sulla finestra
+    gcTime: 600000 // Mantiene i dati in cache per 10 minuti (v5 di TanStack Query)
   });
   
   // Debug info to help diagnose loading issues
@@ -457,7 +459,29 @@ export default function Dashboard() {
                 )}
               </p>
             </div>
-            <div className="mt-3 md:mt-0">
+            <div className="mt-3 md:mt-0 flex items-center gap-2">
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const refreshStart = Date.now();
+                  Promise.all([
+                    refetchTimeEntries(),
+                    refetchExpenses(),
+                    refetchLeaveRequests(),
+                    refetchTrips()
+                  ]).then(() => {
+                    toast({
+                      title: 'Dati aggiornati',
+                      description: `Aggiornamento completato in ${((Date.now() - refreshStart) / 1000).toFixed(1)} secondi`,
+                    });
+                  });
+                }}
+                className="h-9 gap-1"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                <span>Aggiorna</span>
+              </Button>
               <div className="bg-primary-50 text-primary-700 px-3 py-1.5 rounded-md text-sm font-medium inline-flex items-center">
                 <Calendar className="h-4 w-4 mr-1" />
                 {format(currentDate, "d MMMM yyyy")}
