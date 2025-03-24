@@ -75,6 +75,14 @@ export default function QuickEntryForm() {
         title: "Attività registrata",
         description: "L'attività è stata registrata con successo.",
       });
+      
+      // Invalida tutte le query in modo più efficace usando prefissi
+      console.log("Invalidating all cached queries...");
+      
+      // Prima svuota completamente tutta la cache
+      queryClient.removeQueries();
+      
+      // Poi invalida specificamente le query che ci servono
       // Invalida tutte le query correlate, sia regular user che admin
       queryClient.invalidateQueries({ queryKey: ["/api/time-entries"] });
       queryClient.invalidateQueries({ queryKey: ["/api/time-entries/range"] });
@@ -90,7 +98,15 @@ export default function QuickEntryForm() {
       queryClient.invalidateQueries({ queryKey: ["/api/leave-requests/range"] });
       queryClient.invalidateQueries({ queryKey: ["/api/trips/range"] });
       
-      console.log("Tutte le query relative alla dashboard sono state invalidate");
+      // Aggiungiamo un piccolo delay prima di fare il refetch forzato
+      // Questo assicura che il server abbia tempo di processare le nuove entry
+      setTimeout(() => {
+        // Forza la refetch di tutti i dati - più efficace di semplicemente invalidare
+        queryClient.refetchQueries({ type: 'all' });
+        console.log("Forzato refetch di tutte le queries dopo l'inserimento di una nuova attività");
+      }, 500);
+      
+      console.log("Tutte le query relative alla dashboard sono state invalidate e verranno ricaricate");
       
       form.reset({
         date: new Date().toISOString().split("T")[0],

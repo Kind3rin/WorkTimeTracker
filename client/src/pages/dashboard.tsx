@@ -177,6 +177,23 @@ export default function Dashboard() {
     
     if (timeEntries?.length > 0) {
       console.log("First time entry:", timeEntries[0]);
+      
+      // Forza la refetch di tutti i dati se abbiamo time entries ma la dashboard mostra zero
+      if (totalMonthlyHours === 0 && !isLoadingTimeEntries) {
+        console.log("Detected inconsistency: time entries exist but total is 0, triggering refresh");
+        
+        // Invalidate the cache and trigger a refresh
+        queryClient.invalidateQueries({ queryKey: isAdmin 
+          ? ["/api/admin/dashboard/time-entries"]
+          : ["/api/time-entries/range"]
+        });
+        
+        // Delay the refetch to ensure cache is cleared
+        setTimeout(() => {
+          refetchTimeEntries();
+          console.log("Forced refresh for time entries");
+        }, 500);
+      }
     }
     
     if (expenses?.length > 0) {
