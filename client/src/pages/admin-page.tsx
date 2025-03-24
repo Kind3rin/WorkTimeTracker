@@ -11,6 +11,18 @@ import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { Check, X, Info, Clock, UserCheck, Users, UserPlus, UserCog, Key, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+
+// Funzione helper per formattare date in modo sicuro
+function formatSafeDate(dateValue: any, formatStr: string = "dd/MM/yyyy"): string {
+  try {
+    if (!dateValue) return "Data non valida";
+    const date = new Date(dateValue);
+    return !isNaN(date.getTime()) ? format(date, formatStr) : "Data non valida";
+  } catch (e) {
+    console.error("Errore nella formattazione della data:", e, dateValue);
+    return "Data non valida";
+  }
+}
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { type ColumnDef } from "@tanstack/react-table";
