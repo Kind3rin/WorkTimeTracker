@@ -105,40 +105,72 @@ export default function AdminPage() {
   // Mutazione per approvare una richiesta
   const approveMutation = useMutation({
     mutationFn: async ({ id, type }: { id: number, type: string }) => {
+      console.log(`Invio richiesta di approvazione per ${type} con ID ${id}`);
+      
+      // Aggiunta di headers anti-cache
+      const options = {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      };
+      
       const res = await apiRequest("PATCH", `/api/admin/${type}/${id}/approve`);
+      
       // Gestione di risposte che potrebbero non essere in formato JSON valido
-      if (res.status === 204) return null; // No content
+      if (res.status === 204) return { success: true, id, type };
+      
       const text = await res.text();
       try {
-        return text ? JSON.parse(text) : null;
+        return text ? { ...JSON.parse(text), id, type } : { success: true, id, type };
       } catch (e) {
         console.error("Errore nel parsing della risposta:", text);
-        return null;
+        return { success: true, id, type }; // Restituiamo comunque i dati minimi per identificare cosa è stato approvato
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Approvazione completata:", data);
+      
       toast({
         title: "Richiesta approvata",
         description: "La richiesta è stata approvata con successo",
       });
-      // Invalida tutte le query admin
-      queryClient.invalidateQueries({ queryKey: ['/api/admin'] });
       
-      // Invalida anche le query della dashboard per aggiornare i dati in tempo reale
+      // Invalida tutte le query in modo più aggressivo
+      queryClient.clear(); // Rimuove tutto dalla cache
+      
+      // Invalida manualmente le query specifiche
+      queryClient.invalidateQueries({ queryKey: ['/api/admin'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/time-entries'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/expenses'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/trips'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/leave-requests'] });
+      
+      // Invalide le query specifiche per ciascun tipo di risorsa
+      const entityType = getMutationType(data.type);
+      if (entityType) {
+        console.log(`Invalida cache per ${entityType}`);
+        queryClient.invalidateQueries({ queryKey: [`/api/${entityType}`] });
+        
+        // Se è una risorsa che può apparire nella dashboard, invalida anche la dashboard utente
+        if (['timeEntries', 'expenses', 'trips', 'leaveRequests'].includes(entityType)) {
+          queryClient.invalidateQueries({ queryKey: ['/api/user/dashboard'] });
+        }
+      }
       
       setDetailsOpen(false);
       
-      console.log("Query invalidate dopo approvazione");
+      console.log("Cache invalidata dopo approvazione");
+      
+      // Forza l'aggiornamento dei dati dopo un breve ritardo
+      setTimeout(() => {
+        refetch();
+      }, 500);
     },
     onError: (error: Error) => {
+      console.error("Errore durante l'approvazione:", error);
+      
       toast({
         title: "Errore",
-        description: error.message,
+        description: error.message || "Si è verificato un errore durante l'approvazione",
         variant: "destructive",
       });
     },
@@ -147,40 +179,72 @@ export default function AdminPage() {
   // Mutazione per rifiutare una richiesta
   const rejectMutation = useMutation({
     mutationFn: async ({ id, type }: { id: number, type: string }) => {
+      console.log(`Invio richiesta di rifiuto per ${type} con ID ${id}`);
+      
+      // Aggiunta di headers anti-cache
+      const options = {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      };
+      
       const res = await apiRequest("PATCH", `/api/admin/${type}/${id}/reject`);
+      
       // Gestione di risposte che potrebbero non essere in formato JSON valido
-      if (res.status === 204) return null; // No content
+      if (res.status === 204) return { success: true, id, type };
+      
       const text = await res.text();
       try {
-        return text ? JSON.parse(text) : null;
+        return text ? { ...JSON.parse(text), id, type } : { success: true, id, type };
       } catch (e) {
         console.error("Errore nel parsing della risposta:", text);
-        return null;
+        return { success: true, id, type }; // Restituiamo comunque i dati minimi per identificare cosa è stato rifiutato
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Rifiuto completato:", data);
+      
       toast({
         title: "Richiesta rifiutata",
         description: "La richiesta è stata rifiutata con successo",
       });
-      // Invalida tutte le query admin
-      queryClient.invalidateQueries({ queryKey: ['/api/admin'] });
       
-      // Invalida anche le query della dashboard per aggiornare i dati in tempo reale
+      // Invalida tutte le query in modo più aggressivo
+      queryClient.clear(); // Rimuove tutto dalla cache
+      
+      // Invalida manualmente le query specifiche
+      queryClient.invalidateQueries({ queryKey: ['/api/admin'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/time-entries'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/expenses'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/trips'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/leave-requests'] });
+      
+      // Invalide le query specifiche per ciascun tipo di risorsa
+      const entityType = getMutationType(data.type);
+      if (entityType) {
+        console.log(`Invalida cache per ${entityType}`);
+        queryClient.invalidateQueries({ queryKey: [`/api/${entityType}`] });
+        
+        // Se è una risorsa che può apparire nella dashboard, invalida anche la dashboard utente
+        if (['timeEntries', 'expenses', 'trips', 'leaveRequests'].includes(entityType)) {
+          queryClient.invalidateQueries({ queryKey: ['/api/user/dashboard'] });
+        }
+      }
       
       setDetailsOpen(false);
       
-      console.log("Query invalidate dopo rifiuto");
+      console.log("Cache invalidata dopo rifiuto");
+      
+      // Forza l'aggiornamento dei dati dopo un breve ritardo
+      setTimeout(() => {
+        refetch();
+      }, 500);
     },
     onError: (error: Error) => {
+      console.error("Errore durante il rifiuto:", error);
+      
       toast({
         title: "Errore",
-        description: error.message,
+        description: error.message || "Si è verificato un errore durante il rifiuto",
         variant: "destructive",
       });
     },

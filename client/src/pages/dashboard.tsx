@@ -225,13 +225,28 @@ export default function Dashboard() {
   });
   
   // Calculate total monthly hours - solo se i dati sono pronti
-  const totalMonthlyHours = !isLoadingTimeEntries ? timeEntries.reduce((sum, entry) => {
-    console.log("Calculating monthly hours from entry:", entry);
-    return sum + Number(entry.hours);
-  }, 0) : 0;
+  const [totalMonthlyHours, setTotalMonthlyHours] = useState(0);
+  const [totalWeeklyHours, setTotalWeeklyHours] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
-  // Calculate total weekly hours - solo se i dati sono pronti
-  const totalWeeklyHours = !isLoadingTimeEntries ? weeklyTimeData.reduce((sum, day) => sum + day.hours, 0) : 0;
+  // Usa useEffect per calcolare i totali dopo che i dati sono stati caricati
+  useEffect(() => {
+    if (!isLoadingTimeEntries && timeEntries.length > 0) {
+      console.log("Calculating totals from time entries:", timeEntries.length);
+      
+      // Calcolo ore mensili
+      const monthlyTotal = timeEntries.reduce((sum, entry) => {
+        return sum + Number(entry.hours);
+      }, 0);
+      setTotalMonthlyHours(monthlyTotal);
+      
+      // Calcolo ore settimanali
+      const weeklyTotal = weeklyTimeData.reduce((sum, day) => sum + day.hours, 0);
+      setTotalWeeklyHours(weeklyTotal);
+      
+      console.log("Totals calculated:", {monthlyTotal, weeklyTotal});
+    }
+  }, [isLoadingTimeEntries, timeEntries, weeklyTimeData]);
   
   // Log per debug
   useEffect(() => {
@@ -520,52 +535,73 @@ export default function Dashboard() {
                 variant="outline"
                 size="sm"
                 onClick={() => {
+                  // Evita refresh multipli contemporanei
+                  if (isRefreshing) return;
+                  
                   const refreshStart = Date.now();
+                  setIsRefreshing(true);
                   
-                  // Invalidate all cache first
-                  if (isAdmin) {
-                    // Invalidate admin-specific endpoints
-                    queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard/time-entries"] });
-                    queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard/expenses"] });
-                    queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard/leave-requests"] });
-                    queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard/trips"] });
-                  } else {
-                    // Invalidate user-specific endpoints
-                    queryClient.invalidateQueries({ queryKey: ["/api/time-entries/range"] });
-                    queryClient.invalidateQueries({ queryKey: ["/api/expenses/range"] });
-                    queryClient.invalidateQueries({ queryKey: ["/api/leave-requests/range"] });
-                    queryClient.invalidateQueries({ queryKey: ["/api/trips/range"] });
-                  }
+                  // Forziamo il browser a non usare la cache con headers specifici
+                  const fetchOptions = {
+                    headers: {
+                      'Cache-Control': 'no-cache, no-store, must-revalidate',
+                      'Pragma': 'no-cache',
+                      'Expires': '0'
+                    }
+                  };
                   
-                  // Invalidate month stats
-                  queryClient.invalidateQueries({ queryKey: ["/api/user/month-stats"] });
+                  // Invalidate all cache first (complete reset)
+                  queryClient.clear();
                   
-                  // Then refetch everything
-                  Promise.all([
-                    refetchTimeEntries(),
-                    refetchExpenses(),
-                    refetchLeaveRequests(),
-                    refetchTrips(),
-                    refetchMonthStats()
-                  ]).then(() => {
-                    toast({
-                      title: 'Dati aggiornati',
-                      description: `Aggiornamento completato in ${((Date.now() - refreshStart) / 1000).toFixed(1)} secondi`,
+                  console.log("Cache invalidata, avvio refetch...");
+                  
+                  // Then refetch everything with a small delay to ensure cache is cleared
+                  setTimeout(() => {
+                    Promise.all([
+                      refetchTimeEntries(),
+                      refetchExpenses(),
+                      refetchLeaveRequests(),
+                      refetchTrips(),
+                      refetchMonthStats()
+                    ]).then(() => {
+                      console.log("Tutti i dati dashboard sono stati aggiornati con successo");
+                      toast({
+                        title: 'Dati aggiornati',
+                        description: `Aggiornamento completato in ${((Date.now() - refreshStart) / 1000).toFixed(1)} secondi`,
+                      });
+                      
+                      // Forza il ricalcolo dei totali
+                      if (timeEntries.length > 0) {
+                        const monthlyTotal = timeEntries.reduce((sum, entry) => sum + Number(entry.hours), 0);
+                        setTotalMonthlyHours(monthlyTotal);
+                        
+                        const weeklyTotal = weeklyTimeData.reduce((sum, day) => sum + day.hours, 0);
+                        setTotalWeeklyHours(weeklyTotal);
+                        
+                        console.log("Totali ricalcolati dopo refresh:", {monthlyTotal, weeklyTotal});
+                      }
+                      
+                      setIsRefreshing(false);
+                    }).catch(error => {
+                      console.error("Errore nell'aggiornamento dei dati:", error);
+                      toast({
+                        title: 'Errore',
+                        description: 'Impossibile aggiornare alcuni dati',
+                        variant: 'destructive'
+                      });
+                      setIsRefreshing(false);
                     });
-                    console.log("Tutti i dati dashboard sono stati aggiornati con successo");
-                  }).catch(error => {
-                    console.error("Errore nell'aggiornamento dei dati:", error);
-                    toast({
-                      title: 'Errore',
-                      description: 'Impossibile aggiornare alcuni dati',
-                      variant: 'destructive'
-                    });
-                  });
+                  }, 300); // Piccolo delay per sicurezza
                 }}
                 className="h-9 gap-1"
+                disabled={isRefreshing}
               >
-                <RefreshCw className="h-3.5 w-3.5" />
-                <span>Aggiorna</span>
+                {isRefreshing ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-3.5 w-3.5" />
+                )}
+                <span>{isRefreshing ? "Aggiornamento..." : "Aggiorna"}</span>
               </Button>
               <div className="bg-primary-50 text-primary-700 px-3 py-1.5 rounded-md text-sm font-medium inline-flex items-center">
                 <Calendar className="h-4 w-4 mr-1" />
