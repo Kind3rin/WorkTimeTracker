@@ -161,8 +161,25 @@ export default function Dashboard() {
       leaveError,
       tripsError
     });
+    
+    // Log data to debug what we're actually receiving
+    console.log("Dashboard data:", {
+      timeEntries: timeEntries?.length || 0,
+      expenses: expenses?.length || 0,
+      leaveRequests: leaveRequests?.length || 0,
+      trips: trips?.length || 0
+    });
+    
+    if (timeEntries?.length > 0) {
+      console.log("First time entry:", timeEntries[0]);
+    }
+    
+    if (expenses?.length > 0) {
+      console.log("First expense:", expenses[0]);
+    }
   }, [isLoadingTimeEntries, isLoadingExpenses, isLoadingLeave, isLoadingTrips, 
-      timeEntriesError, expensesError, leaveError, tripsError]);
+      timeEntriesError, expensesError, leaveError, tripsError,
+      timeEntries, expenses, leaveRequests, trips]);
   
   // Process weekly time data for chart
   const weekDays = Array.from({ length: 7 }, (_, i) => {
