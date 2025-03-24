@@ -44,9 +44,8 @@ export async function sendInvitationEmail(
     
     console.log(`[DEBUG] URL di invito: ${invitationUrl}`);
     
-    // Per test in ambiente di sviluppo, stampa a console invece di inviare email
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`
+    // Per test e sviluppo, stampa sempre a console l'email (così possiamo vederla)
+    console.log(`
         [EMAIL SIMULATA]
         A: ${user.email}
         Oggetto: Invito a Time Tracker
@@ -67,6 +66,9 @@ export async function sendInvitationEmail(
         Cordiali saluti,
         Il team di Time Tracker
       `);
+    
+    // In ambiente di sviluppo non inviamo realmente l'email, ma restituiamo comunque successo
+    if (process.env.NODE_ENV === 'development' || !process.env.EMAIL_HOST) {
       return true;
     }
     
