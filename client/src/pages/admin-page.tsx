@@ -95,8 +95,11 @@ export default function AdminPage() {
     );
   }
 
+  // Funzione per mappare il tipo di mutazione al tipo di entità
+  // Usiamo la funzione getMutationType che è definita più avanti nel codice
+
   // Query per ottenere le richieste in base al tab selezionato
-  const { data: pendingItems, isLoading, error } = useQuery({
+  const { data: pendingItems, isLoading, error, refetch } = useQuery({
     queryKey: ['/api/admin', selectedTab],
     queryFn: () => apiRequest("GET", `/api/admin/${selectedTab}`).then(res => res.json()),
     enabled: user?.role === "admin",
