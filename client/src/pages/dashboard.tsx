@@ -98,9 +98,10 @@ export default function Dashboard() {
         }],
     enabled: !!user,
     retry: 1, // Reduce retries for faster failure
-    staleTime: 300000, // Considera i dati validi per 5 minuti prima di richiedere un aggiornamento
-    refetchOnWindowFocus: false, // Disabilitiamo il refresh automatico quando il focus torna sulla finestra
-    gcTime: 600000 // Mantiene i dati in cache per 10 minuti (v5 di TanStack Query)
+    staleTime: 60000, // Considera i dati validi per 1 minuto prima di richiedere un aggiornamento (ridotto da 5 minuti)
+    refetchOnWindowFocus: true, // Riabilitiamo il refresh automatico quando il focus torna sulla finestra
+    gcTime: 300000, // Mantiene i dati in cache per 5 minuti (ridotto da 10 minuti)
+    refetchOnMount: true // Assicura che i dati vengano aggiornati quando il componente viene montato
   });
   
   // Fetch spese con parametri specifici per azienda o tutte le spese se admin
@@ -118,9 +119,10 @@ export default function Dashboard() {
         }],
     enabled: !!user,
     retry: 1,
-    staleTime: 300000, // Considera i dati validi per 5 minuti prima di richiedere un aggiornamento
-    refetchOnWindowFocus: false, // Disabilitiamo il refresh automatico quando il focus torna sulla finestra
-    gcTime: 600000 // Mantiene i dati in cache per 10 minuti (v5 di TanStack Query)
+    staleTime: 60000, // Considera i dati validi per 1 minuto prima di richiedere un aggiornamento (ridotto da 5 minuti)
+    refetchOnWindowFocus: true, // Riabilitiamo il refresh automatico quando il focus torna sulla finestra
+    gcTime: 300000, // Mantiene i dati in cache per 5 minuti (ridotto da 10 minuti)
+    refetchOnMount: true // Assicura che i dati vengano aggiornati quando il componente viene montato
   });
   
   // Fetch richieste ferie con parametri specifici per azienda o tutte le richieste se admin
@@ -131,9 +133,10 @@ export default function Dashboard() {
       : ["/api/leave-requests", { companyId }],
     enabled: !!user,
     retry: 1,
-    staleTime: 300000, // Considera i dati validi per 5 minuti prima di richiedere un aggiornamento
-    refetchOnWindowFocus: false, // Disabilitiamo il refresh automatico quando il focus torna sulla finestra
-    gcTime: 600000 // Mantiene i dati in cache per 10 minuti (v5 di TanStack Query)
+    staleTime: 60000, // Considera i dati validi per 1 minuto prima di richiedere un aggiornamento (ridotto da 5 minuti)
+    refetchOnWindowFocus: true, // Riabilitiamo il refresh automatico quando il focus torna sulla finestra
+    gcTime: 300000, // Mantiene i dati in cache per 5 minuti (ridotto da 10 minuti)
+    refetchOnMount: true // Assicura che i dati vengano aggiornati quando il componente viene montato
   });
   
   // Fetch trasferte con parametri specifici per azienda o tutte le trasferte se admin
@@ -144,9 +147,10 @@ export default function Dashboard() {
       : ["/api/trips", { companyId }],
     enabled: !!user,
     retry: 1,
-    staleTime: 300000, // Considera i dati validi per 5 minuti prima di richiedere un aggiornamento
-    refetchOnWindowFocus: false, // Disabilitiamo il refresh automatico quando il focus torna sulla finestra
-    gcTime: 600000 // Mantiene i dati in cache per 10 minuti (v5 di TanStack Query)
+    staleTime: 60000, // Considera i dati validi per 1 minuto prima di richiedere un aggiornamento (ridotto da 5 minuti)
+    refetchOnWindowFocus: true, // Riabilitiamo il refresh automatico quando il focus torna sulla finestra
+    gcTime: 300000, // Mantiene i dati in cache per 5 minuti (ridotto da 10 minuti)
+    refetchOnMount: true // Assicura che i dati vengano aggiornati quando il componente viene montato
   });
   
   // Debug info to help diagnose loading issues

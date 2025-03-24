@@ -75,11 +75,23 @@ export default function QuickEntryForm() {
         title: "Attività registrata",
         description: "L'attività è stata registrata con successo.",
       });
-      // Invalida tutte le query correlate
+      // Invalida tutte le query correlate, sia regular user che admin
       queryClient.invalidateQueries({ queryKey: ["/api/time-entries"] });
       queryClient.invalidateQueries({ queryKey: ["/api/time-entries/range"] });
-      // Invalida anche le query della dashboard admin
+      
+      // Invalida tutte le query della dashboard admin
       queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard/time-entries"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard/expenses"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard/leave-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard/trips"] });
+      
+      // Invalida anche le altre query che potrebbero influenzare la dashboard
+      queryClient.invalidateQueries({ queryKey: ["/api/expenses/range"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leave-requests/range"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trips/range"] });
+      
+      console.log("Tutte le query relative alla dashboard sono state invalidate");
+      
       form.reset({
         date: new Date().toISOString().split("T")[0],
         activityTypeId: "",
