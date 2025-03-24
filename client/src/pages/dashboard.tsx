@@ -231,8 +231,11 @@ export default function Dashboard() {
   
   // Usa useEffect per calcolare i totali dopo che i dati sono stati caricati
   useEffect(() => {
-    if (!isLoadingTimeEntries && timeEntries.length > 0) {
-      console.log("Calculating totals from time entries:", timeEntries.length);
+    console.log("Dashboard data state change - timeEntries:", timeEntries.length);
+    
+    if (!isLoadingTimeEntries) {
+      // Forziamo il calcolo anche se l'array è vuoto per gestire un potenziale reset a 0
+      console.log("Calculating totals from time entries:", timeEntries);
       
       // Calcolo ore mensili
       const monthlyTotal = timeEntries.reduce((sum, entry) => {

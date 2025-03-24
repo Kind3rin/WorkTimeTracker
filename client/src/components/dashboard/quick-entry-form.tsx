@@ -101,10 +101,24 @@ export default function QuickEntryForm() {
       // Aggiungiamo un piccolo delay prima di fare il refetch forzato
       // Questo assicura che il server abbia tempo di processare le nuove entry
       setTimeout(() => {
-        // Forza la refetch di tutti i dati - più efficace di semplicemente invalidare
+        // Clear cache completely first
+        queryClient.clear();
+        console.log("Cache completamente cancellata dopo l'inserimento di una nuova attività");
+        
+        // Poi forza la refetch di tutti i dati specifici
+        queryClient.refetchQueries({ 
+          queryKey: ["/api/time-entries/range"],
+          exact: false 
+        });
+        queryClient.refetchQueries({ 
+          queryKey: ["/api/admin/dashboard/time-entries"],
+          exact: false 
+        });
+        
+        // Infine, ricarica tutte le altre queries
         queryClient.refetchQueries({ type: 'all' });
         console.log("Forzato refetch di tutte le queries dopo l'inserimento di una nuova attività");
-      }, 500);
+      }, 800); // Aumentiamo il delay a 800ms per sicurezza
       
       console.log("Tutte le query relative alla dashboard sono state invalidate e verranno ricaricate");
       
